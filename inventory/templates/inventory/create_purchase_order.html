@@ -1,0 +1,161 @@
+<!-- my_business_app/inventory/templates/inventory/create_purchase_order.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Create New Purchase Order</h1>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-3xl mx-auto border border-blue-200">
+    {% if messages %}
+        <ul class="mb-4 space-y-2">
+            {% for message in messages %}
+                <li class="p-3 rounded-lg text-sm font-medium text-center
+                    {% if message.tags == 'error' %}bg-red-100 text-red-700
+                    {% elif message.tags == 'success' %}bg-green-100 text-green-700
+                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" id="purchaseOrderForm" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Purchase Order Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="{{ po_form.supplier.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ po_form.supplier.label }}
+                </label>
+                {{ po_form.supplier }}
+                {% if po_form.supplier.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ po_form.supplier.errors }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ po_form.expected_delivery_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ po_form.expected_delivery_date.label }}
+                </label>
+                {{ po_form.expected_delivery_date }}
+                {% if po_form.expected_delivery_date.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ po_form.expected_delivery_date.errors }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label for="{{ po_form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ po_form.notes.label }}
+            </label>
+            {{ po_form.notes }}
+            {% if po_form.notes.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ po_form.notes.errors }}</p>
+            {% endif %}
+        </div>
+
+        <hr class="my-6 border-gray-200">
+
+        <!-- Purchase Order Items (Formset) -->
+        <h3 class="text-2xl font-semibold text-indigo-700 mb-4">Order Items</h3>
+        <div id="formset-container" class="space-y-4">
+            {{ formset.management_form }}
+            {% for form in formset %}
+                <div class="formset-row bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div class="flex-1">
+                        <label for="{{ form.product.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.product.label }}
+                        </label>
+                        {{ form.product }}
+                        {% if form.product.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.product.errors }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="w-full sm:w-1/4">
+                        <label for="{{ form.quantity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.quantity.label }}
+                        </label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.quantity.errors }}</p>
+                        {% endif %}
+                    </div>
+                    {% if form.DELETE %}
+                        <div class="flex items-center sm:self-center mt-2 sm:mt-0">
+                            <label for="{{ form.DELETE.id_for_label }}" class="ml-2 block text-sm text-gray-700">Remove</label>
+                            {{ form.DELETE }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" id="add-item" class="bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md">Add Another Item</button>
+
+        <button
+            type="submit"
+            class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300 shadow-lg mt-6"
+        >
+            Create Purchase Order
+        </button>
+    </form>
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'inventory:purchase_order_list' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors">Back to Purchase Orders</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addItemButton = document.getElementById('add-item');
+        const formsetContainer = document.getElementById('formset-container');
+        const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+        const emptyForm = document.querySelector('.formset-row').cloneNode(true); // Clone the first form row
+
+        // Clear values in the cloned empty form
+        emptyForm.querySelectorAll('input, select, textarea').forEach(input => {
+            input.value = '';
+            input.checked = false; // For checkboxes
+        });
+        emptyForm.style.display = 'none'; // Hide the original empty form if it's rendered
+
+        // Function to update element names and IDs for new form rows
+        function updateElementIndex(element, prefix, index) {
+            const name = element.getAttribute('name');
+            const id = element.getAttribute('id');
+
+            if (name) {
+                element.setAttribute('name', name.replace(prefix + '-__prefix__', prefix + '-' + index));
+            }
+            if (id) {
+                element.setAttribute('id', id.replace(prefix + '-__prefix__', prefix + '-' + index));
+            }
+        }
+
+        addItemButton.addEventListener('click', function() {
+            const currentForms = formsetContainer.querySelectorAll('.formset-row').length;
+            const newForm = emptyForm.cloneNode(true); // Clone the empty form
+
+            // Update names and IDs for new form elements
+            newForm.querySelectorAll('input, select, textarea, label').forEach(element => {
+                updateElementIndex(element, 'form', currentForms);
+            });
+
+            // Make sure the DELETE checkbox is unchecked for new forms
+            const deleteCheckbox = newForm.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleteCheckbox) {
+                deleteCheckbox.checked = false;
+            }
+
+            formsetContainer.appendChild(newForm);
+            newForm.style.display = 'flex'; // Show the new form
+            totalFormsInput.value = parseInt(totalFormsInput.value) + 1; // Increment TOTAL_FORMS
+        });
+
+        // Initial styling for form fields
+        document.querySelectorAll('input[type="text"], input[type="number"], select, textarea, input[type="date"]').forEach(input => {
+            input.classList.add('w-full', 'px-4', 'py-2', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'transition-colors');
+        });
+    });
+</script>
+{% endblock content %}

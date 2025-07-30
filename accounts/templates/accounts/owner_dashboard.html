@@ -1,0 +1,84 @@
+<!-- my_business_app/accounts/templates/accounts/owner_dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-5xl mx-auto border border-blue-200 text-center">
+    <h1 class="text-4xl font-extrabold text-indigo-800 mb-6">Welcome, {{ user.username }}!</h1>
+    <p class="text-lg text-gray-700 mb-8">You are logged in as an <span class="font-semibold text-indigo-600">{{ user_role }}</span>.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Sales & Reporting Card -->
+        <div class="bg-blue-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-blue-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Chart Icon">📈</span>
+            <h3 class="text-2xl font-semibold text-blue-800 mb-3">Sales & Reports</h3>
+            <p class="text-gray-700 mb-4">Analyze sales trends and product performance.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'accounts:sales_report' %}" class="inline-block bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Sales Reports</a>
+                <a href="{% url 'inventory:product_performance_report' %}" class="inline-block bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Product Performance</a>
+                <a href="{% url 'inventory:employee_sales_report' %}" class="inline-block bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Employee Sales</a>
+            </div>
+        </div>
+
+        <!-- Inventory & Stock Management Card -->
+        <div class="bg-green-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-green-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Box Icon">📦</span>
+            <h3 class="text-2xl font-semibold text-green-800 mb-3">Inventory Management</h3>
+            <p class="text-gray-700 mb-4">Manage stock levels and track inventory flow.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'inventory:add_stock' %}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">Add Stock</a>
+                <a href="{% url 'inventory:low_stock_alerts' %}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">Low Stock Alerts</a>
+                <a href="{% url 'inventory:create_stock_adjustment' %}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">Adjust Stock</a>
+                <a href="{% url 'admin:inventory_product_changelist' %}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">Manage Products</a>
+            </div>
+        </div>
+
+        <!-- Supplier & Purchase Orders Card -->
+        <div class="bg-purple-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-purple-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Truck Icon">🚚</span>
+            <h3 class="text-2xl font-semibold text-purple-800 mb-3">Suppliers & Orders</h3>
+            <p class="text-gray-700 mb-4">Oversee supplier relations and purchase orders.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'inventory:supplier_list' %}" class="inline-block bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors">View Suppliers</a>
+                <a href="{% url 'inventory:create_purchase_order' %}" class="inline-block bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors">Create PO</a>
+                <a href="{% url 'inventory:purchase_order_list' %}" class="inline-block bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors">View All POs</a>
+            </div>
+        </div>
+
+        <!-- Customer Management Card -->
+        <div class="bg-yellow-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-yellow-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Users Icon">👥</span>
+            <h3 class="text-2xl font-semibold text-yellow-800 mb-3">Customer Management</h3>
+            <p class="text-gray-700 mb-4">Manage customer information and purchase history.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'inventory:customer_list' %}" class="inline-block bg-yellow-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-yellow-700 transition-colors">View Customers</a>
+                <a href="{% url 'inventory:create_customer' %}" class="inline-block bg-yellow-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-yellow-700 transition-colors">Add Customer</a>
+            </div>
+        </div>
+
+        <!-- Expense Tracking Card -->
+        <div class="bg-orange-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-orange-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Money Bag Icon">💰</span>
+            <h3 class="text-2xl font-semibold text-orange-800 mb-3">Expense Tracking</h3>
+            <p class="text-gray-700 mb-4">Record and report on business expenditures.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'accounts:create_expense' %}" class="inline-block bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors">Record Expense</a>
+                <a href="{% url 'accounts:expense_list' %}" class="inline-block bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors">View All Expenses</a>
+                <a href="{% url 'accounts:expense_report' %}" class="inline-block bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors">Expense Report</a>
+                <a href="{% url 'accounts:expense_category_list' %}" class="inline-block bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors">Manage Categories</a>
+            </div>
+        </div>
+
+        <!-- Employee & User Management Card -->
+        <div class="bg-red-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-red-200">
+            <span class="text-5xl mb-4" role="img" aria-label="User Gear Icon">⚙️</span>
+            <h3 class="text-2xl font-semibold text-red-800 mb-3">Employee & User Admin</h3>
+            <p class="text-gray-700 mb-4">Manage employee accounts and roles.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'admin:auth_user_changelist' %}" class="inline-block bg-red-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors">Go to User Admin</a>
+                <a href="{% url 'admin:index' %}" class="inline-block bg-red-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors">Full Admin Panel</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

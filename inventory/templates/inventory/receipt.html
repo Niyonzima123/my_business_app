@@ -1,0 +1,125 @@
+<!-- my_business_app/inventory/templates/inventory/receipt.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <!-- Tailwind CSS CDN for basic styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .receipt-container {
+            width: 100%;
+            max-width: 400px; /* Typical receipt width */
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .receipt-header, .receipt-footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .receipt-body {
+            border-top: 1px dashed #cbd5e0;
+            border-bottom: 1px dashed #cbd5e0;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        @media print {
+            body {
+                background-color: white;
+                margin: 0;
+                padding: 0;
+                display: block;
+            }
+            .receipt-container {
+                box-shadow: none;
+                border: none;
+                margin: 0 auto;
+                width: 100%;
+                max-width: 400px;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <h1 class="text-2xl font-bold text-gray-800 mb-1">{{ business_name }}</h1>
+            <p class="text-sm text-gray-600">{{ business_address }}</p>
+            <p class="text-sm text-gray-600">Phone: {{ business_phone }}</p>
+            <p class="text-sm text-gray-600">Email: {{ business_email }}</p>
+        </div>
+
+        <div class="text-center text-sm mb-4">
+            <p><strong>Sale ID:</strong> #{{ sale.id }}</p>
+            <p><strong>Date:</strong> {{ sale.sale_date|date:"Y-m-d H:i:s" }}</p>
+            <p><strong>Processed By:</strong> {{ sale.user.username|default:"N/A" }}</p>
+            <p><strong>Customer:</strong> {{ sale.customer.get_full_name|default:"Walk-in Customer" }}</p>
+        </div>
+
+        <div class="receipt-body">
+            <div class="item-row font-semibold text-gray-700">
+                <span>Item</span>
+                <span>Qty</span>
+                <span>Unit Price</span>
+                <span>Subtotal</span>
+            </div>
+            {% for item in sale_items %}
+            <div class="item-row">
+                <span>{{ item.product.name|truncatechars:20 }}</span>
+                <span>{{ item.quantity }}</span>
+                <span>{{ item.unit_price|floatformat:2 }}</span>
+                <span>{{ item.subtotal|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+            <div class="total-row text-indigo-800">
+                <span>Total:</span>
+                <span>RWF {{ sale.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <div class="receipt-footer">
+            <p class="text-sm text-gray-700 mb-2">Thank you for your business!</p>
+            <p class="text-xs text-gray-500">Please come again!</p>
+        </div>
+
+        <div class="no-print flex justify-center gap-4 mt-6">
+            <button onclick="window.print()" class="bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md">
+                Print Receipt
+            </button>
+            <a href="{% url 'inventory:pos_view' %}" class="bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors shadow-md">
+                New Sale
+            </a>
+        </div>
+    </div>
+</body>
+</html>

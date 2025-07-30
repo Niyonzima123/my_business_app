@@ -1,0 +1,67 @@
+<!-- my_business_app/inventory/templates/inventory/product_performance_report.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Product Performance Report</h1>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-5xl mx-auto border border-blue-200">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700">Top Products by Quantity Sold</h2>
+    </div>
+
+    {% if products_by_sales %}
+        <div class="overflow-x-auto mb-8">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Product Name</th>
+                        <th class="py-3 px-6 text-right">Total Quantity Sold</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for product in products_by_sales %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ product.name }}</td>
+                        <td class="py-3 px-6 text-right">{{ product.total_quantity_sold }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center p-4 mb-8">No product sales data available yet.</p>
+    {% endif %}
+
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700">Top Products by Revenue</h2>
+    </div>
+
+    {% if products_with_revenue %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Product Name</th>
+                        <th class="py-3 px-6 text-right">Total Revenue (RWF)</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for product in products_with_revenue %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ product.name }}</td>
+                        <td class="py-3 px-6 text-right">RWF {{ product.total_revenue|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center p-4">No product revenue data available yet.</p>
+    {% endif %}
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'accounts:owner_dashboard' %}" class="inline-block bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

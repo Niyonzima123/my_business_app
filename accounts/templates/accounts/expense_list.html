@@ -1,0 +1,90 @@
+<!-- my_business_app/accounts/templates/accounts/expense_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">All Expenses</h1>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-5xl mx-auto border border-blue-200">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700">Expense Records</h2>
+        <a href="{% url 'accounts:create_expense' %}" class="bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-md">Record New Expense</a>
+    </div>
+
+    {% if messages %}
+        <ul class="mb-4 space-y-2">
+            {% for message in messages %}
+                <li class="p-3 rounded-lg text-sm font-medium text-center
+                    {% if message.tags == 'error' %}bg-red-100 text-red-700
+                    {% elif message.tags == 'success' %}bg-green-100 text-green-700
+                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Expense Filter Form -->
+    <form method="get" action="{% url 'accounts:expense_list' %}" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div>
+            <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Filter by Category:</label>
+            <select id="category" name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category|floatformat:0 == category.id|floatformat:0 %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" value="{{ selected_start_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+        <div>
+            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date:</label>
+            <input type="date" id="end_date" name="end_date" value="{{ selected_end_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+        <div class="md:col-span-3 flex justify-end">
+            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-md">Apply Filters</button>
+        </div>
+    </form>
+
+    {% if expenses %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Category</th>
+                        <th class="py-3 px-6 text-right">Amount (RWF)</th>
+                        <th class="py-3 px-6 text-left">Date</th>
+                        <th class="py-3 px-6 text-left">Description</th>
+                        <th class="py-3 px-6 text-left">Recorded By</th>
+                        <th class="py-3 px-6 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for expense in expenses %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ expense.category.name }}</td>
+                        <td class="py-3 px-6 text-right font-semibold">{{ expense.amount|floatformat:2 }}</td>
+                        <td class="py-3 px-6 text-left">{{ expense.date|date:"Y-m-d" }}</td>
+                        <td class="py-3 px-6 text-left">{{ expense.description|truncatechars:50|default:"N/A" }}</td>
+                        <td class="py-3 px-6 text-left">{{ expense.recorded_by.username|default:"N/A" }}</td>
+                        <td class="py-3 px-6 text-left">
+                            <a href="{% url 'admin:accounts_expense_change' expense.id %}" class="text-blue-600 hover:underline text-xs font-semibold">Edit (Admin)</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center p-4 bg-gray-50 rounded-lg border border-gray-200">No expenses recorded yet for the selected filters. Record one now!</p>
+    {% endif %}
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'accounts:owner_dashboard' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

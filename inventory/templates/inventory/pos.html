@@ -1,0 +1,323 @@
+<!-- my_business_app/inventory/templates/inventory/pos.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Point of Sale</h1>
+
+<div class="text-center text-lg font-medium text-gray-700 mb-4">
+    Logged in as: <span class="font-semibold text-indigo-600">{{ user.username }} ({{ user_role }})</span>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-5xl mx-auto border border-blue-200">
+    <form id="posForm" method="post" action="{% url 'inventory:pos_view' %}" class="space-y-6">
+        {% csrf_token %} {# Django's security token for forms #}
+
+        <!-- Customer Selection -->
+        <div class="mb-6">
+            <label for="customerSelect" class="block text-lg font-medium text-gray-700 mb-2">Select Customer (Optional):</label>
+            <select id="customerSelect" name="customer_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <option value="">-- Walk-in Customer --</option>
+                {% for customer in customers %}
+                    <option value="{{ customer.id }}">
+                        {{ customer.get_full_name }} ({{ customer.phone_number|default:customer.email|default:"N/A" }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <hr class="my-6 border-gray-200">
+
+        <!-- Product Input Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Barcode Input -->
+            <div>
+                <label for="barcodeInput" class="block text-lg font-medium text-gray-700 mb-2">Scan/Enter Barcode:</label>
+                <div class="flex gap-3">
+                    <input type="text" id="barcodeInput" class="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors" placeholder="Scan barcode or type product code">
+                    <button type="button" id="scanBarcodeBtn" class="bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-md">
+                        Scan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Manual Product Selection -->
+            <div>
+                <label for="productSelect" class="block text-lg font-medium text-gray-700 mb-2">Or Select Product Manually:</label>
+                <select id="productSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <option value="">-- Select a Product --</option>
+                    {% for product in products %}
+                        <option value="{{ product.id }}" data-price="{{ product.price }}" data-stock="{{ product.stock_quantity }}" data-barcode="{{ product.barcode|default:'' }}">
+                            {{ product.name }} (RWF {{ product.price|floatformat:2 }}) - Stock: {{ product.stock_quantity }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <!-- Quantity Input and Add Button -->
+        <div class="flex flex-col sm:flex-row gap-4 items-center mt-4">
+            <div class="flex-grow w-full sm:w-auto">
+                <label for="quantityInput" class="block text-lg font-medium text-gray-700 mb-2">Quantity:</label>
+                <input type="number" id="quantityInput" value="1" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+            </div>
+            <button type="button" id="addItemBtn" class="w-full sm:w-auto mt-6 sm:mt-0 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-300 shadow-md">
+                Add Item to Cart
+            </button>
+        </div>
+
+        <hr class="my-6 border-gray-200">
+
+        <!-- Selected Items List -->
+        <div>
+            <h3 class="text-2xl font-semibold text-indigo-700 mb-4">Items in Cart:</h3>
+            <div id="cartItems" class="space-y-3 min-h-[100px] max-h-[300px] overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <p id="noItemsMessage" class="text-gray-500 text-center py-8">No items added yet.</p>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center bg-indigo-50 p-4 rounded-lg shadow-inner border border-indigo-200">
+            <span class="text-xl font-bold text-indigo-800">Total:</span>
+            <span id="totalAmount" class="text-3xl font-extrabold text-indigo-900">RWF 0.00</span>
+        </div>
+
+        <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300 shadow-lg">
+            Process Sale
+        </button>
+
+        <!-- Message Display Area -->
+        <div id="messageArea" class="mt-4 p-3 rounded-lg text-center text-sm font-medium hidden"></div>
+    </form>
+</div>
+
+<script>
+    // Get references to HTML elements
+    const customerSelect = document.getElementById('customerSelect');
+    const barcodeInput = document.getElementById('barcodeInput');
+    const scanBarcodeBtn = document.getElementById('scanBarcodeBtn');
+    const productSelect = document.getElementById('productSelect');
+    const quantityInput = document.getElementById('quantityInput');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const cartItemsDiv = document.getElementById('cartItems');
+    const totalAmountSpan = document.getElementById('totalAmount');
+    const noItemsMessage = document.getElementById('noItemsMessage');
+    const posForm = document.getElementById('posForm');
+    const messageArea = document.getElementById('messageArea');
+
+    let cart = []; // Array to hold items in the current sale
+    let currentTotal = 0;
+
+    // URL for fetching product by barcode (passed from Django view context)
+    const getProductByBarcodeUrl = "{{ get_product_by_barcode_url }}";
+
+    // Function to update the displayed cart and total
+    function updateCartDisplay() {
+        cartItemsDiv.innerHTML = ''; // Clear existing items
+        currentTotal = 0;
+
+        if (cart.length === 0) {
+            noItemsMessage.classList.remove('hidden');
+        } else {
+            noItemsMessage.classList.add('hidden');
+            cart.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm';
+                itemDiv.innerHTML = `
+                    <span class="text-gray-800 font-medium">${item.quantity} x ${item.productName}</span>
+                    <span class="text-indigo-600 font-semibold">RWF ${(item.quantity * item.productPrice).toFixed(2)}</span>
+                    <button type="button" data-index="${index}" class="remove-item-btn text-red-500 hover:text-red-700 transition-colors text-lg font-bold">
+                        &times;
+                    </button>
+                `;
+                cartItemsDiv.appendChild(itemDiv);
+                currentTotal += (item.quantity * item.productPrice);
+            });
+        }
+        totalAmountSpan.textContent = `RWF ${currentTotal.toFixed(2)}`;
+    }
+
+    // Function to add a product to the cart (used by both manual select and barcode scan)
+    function addProductToCart(product, quantityToAdd) {
+        const productId = product.id;
+        const productName = product.name;
+        const productPrice = parseFloat(product.price);
+        const productStock = parseInt(product.stock_quantity);
+
+        if (isNaN(quantityToAdd) || quantityToAdd <= 0) {
+            showMessage('Please enter a valid quantity.', 'error');
+            return false;
+        }
+        if (quantityToAdd > productStock) {
+            showMessage(`Not enough stock for ${productName}. Available: ${productStock}`, 'error');
+            return false;
+        }
+
+        // Check if product already in cart, update quantity
+        const existingItemIndex = cart.findIndex(item => item.productId === productId);
+        if (existingItemIndex > -1) {
+            const currentCartQuantity = cart[existingItemIndex].quantity;
+            if (currentCartQuantity + quantityToAdd > productStock) {
+                 showMessage(`Adding ${quantityToAdd} would exceed available stock for ${productName}. Current in cart: ${currentCartQuantity}, Available: ${productStock}`, 'error');
+                 return false;
+            }
+            cart[existingItemIndex].quantity += quantityToAdd;
+        } else {
+            cart.push({ productId, productName, productPrice, quantity: quantityToAdd });
+        }
+
+        // Deduct stock visually from the select option (if it exists)
+        const productOption = productSelect.querySelector(`option[value="${productId}"]`);
+        if (productOption) {
+            productOption.dataset.stock = productStock - quantityToAdd;
+            productOption.textContent = `${productName} (RWF ${productPrice.toFixed(2)}) - Stock: ${productOption.dataset.stock}`;
+        }
+
+        updateCartDisplay();
+        showMessage('Item added to cart!', 'success');
+        return true;
+    }
+
+    // Event listener for adding items to cart via manual select
+    addItemBtn.addEventListener('click', () => {
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        const productId = selectedOption.value;
+
+        if (!productId) {
+            showMessage('Please select a product.', 'error');
+            return;
+        }
+
+        // Find the product object from the initial `products` context (or re-fetch if necessary)
+        // For simplicity here, we'll construct a temporary product object from option data
+        const productData = {
+            id: productId,
+            name: selectedOption.textContent.split('(')[0].trim(),
+            price: selectedOption.dataset.price,
+            stock_quantity: selectedOption.dataset.stock,
+        };
+        const quantity = parseInt(quantityInput.value);
+
+        if (addProductToCart(productData, quantity)) {
+            quantityInput.value = 1; // Reset quantity
+            productSelect.value = ''; // Reset product selection
+        }
+    });
+
+    // Event listener for barcode input (on Enter key press)
+    barcodeInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent form submission
+            scanBarcodeBtn.click(); // Trigger the scan button click
+        }
+    });
+
+    // Event listener for "Scan Barcode" button
+    scanBarcodeBtn.addEventListener('click', async () => {
+        const barcode = barcodeInput.value.trim();
+        if (!barcode) {
+            showMessage('Please enter a barcode.', 'error');
+            return;
+        }
+
+        showMessage('Searching for product...', 'info');
+
+        try {
+            const response = await fetch(`${getProductByBarcodeUrl}?barcode=${barcode}`);
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                const product = result.product;
+                const quantity = parseInt(quantityInput.value); // Use the quantity input for barcode scans too
+
+                if (addProductToCart(product, quantity)) {
+                    barcodeInput.value = ''; // Clear barcode input after successful add
+                    quantityInput.value = 1; // Reset quantity
+                    // Optionally, you might want to select the product in the dropdown
+                    // productSelect.value = product.id;
+                }
+            } else {
+                showMessage(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Barcode lookup error:', error);
+            showMessage('Error looking up product by barcode. Please try again.', 'error');
+        }
+    });
+
+
+    // Event listener for removing items from cart
+    cartItemsDiv.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-item-btn')) {
+            const indexToRemove = parseInt(e.target.dataset.index);
+            const removedItem = cart.splice(indexToRemove, 1)[0];
+
+            // Return stock visually to the select option
+            const productOption = productSelect.querySelector(`option[value="${removedItem.productId}"]`);
+            if (productOption) {
+                productOption.dataset.stock = parseInt(productOption.dataset.stock) + removedItem.quantity;
+                productOption.textContent = `${removedItem.productName} (RWF ${removedItem.productPrice.toFixed(2)}) - Stock: ${productOption.dataset.stock}`;
+            }
+
+            updateCartDisplay();
+            showMessage('Item removed from cart.', 'info');
+        }
+    });
+
+    // Function to display messages
+    function showMessage(msg, type) {
+        messageArea.textContent = msg;
+        messageArea.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
+        if (type === 'error') {
+            messageArea.classList.add('bg-red-100', 'text-red-700');
+        } else if (type === 'success') {
+            messageArea.classList.add('bg-green-100', 'text-green-700');
+        } else { // info
+            messageArea.classList.add('bg-blue-100', 'text-blue-700');
+        }
+        setTimeout(() => {
+            messageArea.classList.add('hidden');
+        }, 3000); // Hide after 3 seconds
+    }
+
+    // Event listener for form submission
+    posForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevent default form submission
+
+        if (cart.length === 0) {
+            showMessage('Please add items to the cart before processing the sale.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        formData.append('customer_id', customerSelect.value); // Add selected customer ID
+
+        cart.forEach(item => {
+            formData.append('items[]', `product_id=${item.productId}&quantity=${item.quantity}`);
+        });
+
+        try {
+            const response = await fetch(posForm.action, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showMessage(result.message, 'success');
+                cart = []; // Clear cart after successful sale
+                updateCartDisplay();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Sale processing error:', error);
+            showMessage('Network error or server issue. Please try again.', 'error');
+        }
+    });
+
+    // Initial display update
+    updateCartDisplay();
+</script>
+{% endblock content %}

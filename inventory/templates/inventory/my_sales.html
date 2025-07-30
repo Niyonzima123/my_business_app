@@ -1,0 +1,45 @@
+<!-- my_business_app/inventory/templates/inventory/my_sales.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">My Sales History</h1>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-5xl mx-auto border border-blue-200">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700">Your Recent Sales</h2>
+    </div>
+
+    {% if sales %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Sale ID</th>
+                        <th class="py-3 px-6 text-left">Date</th>
+                        <th class="py-3 px-6 text-right">Total Amount (RWF)</th>
+                        <th class="py-3 px-6 text-left">Customer</th>
+                        {# Add more columns if needed, e.g., Payment Method #}
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for sale in sales %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ sale.id }}</td>
+                        <td class="py-3 px-6 text-left">{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
+                        <td class="py-3 px-6 text-right">{{ sale.total_amount|floatformat:2 }}</td>
+                        <td class="py-3 px-6 text-left">{{ sale.customer.get_full_name|default:"Walk-in Customer" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center p-4">You haven't processed any sales yet.</p>
+    {% endif %}
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'inventory:pos_view' %}" class="inline-block bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Go to POS</a>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,93 @@
+<!-- my_business_app/inventory/templates/inventory/purchase_order_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Purchase Order #{{ purchase_order.id }}</h1>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-4xl mx-auto border border-blue-200">
+    {% if messages %}
+        <ul class="mb-4 space-y-2">
+            {% for message in messages %}
+                <li class="p-3 rounded-lg text-sm font-medium text-center
+                    {% if message.tags == 'error' %}bg-red-100 text-red-700
+                    {% elif message.tags == 'success' %}bg-green-100 text-green-700
+                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Purchase Order Details Section -->
+    <div class="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4 border-b pb-2 border-gray-200">Order Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+            <div>
+                <p><strong>Supplier:</strong> {{ purchase_order.supplier.name }}</p>
+                <p><strong>Order Date:</strong> {{ purchase_order.order_date|date:"Y-m-d" }}</p>{# Changed from "Y-m-d H:i" to "Y-m-d" #}
+                <p><strong>Expected Delivery:</strong> {{ purchase_order.expected_delivery_date|date:"Y-m-d" }}</p>
+            </div>
+            <div>
+                <p><strong>Total Amount:</strong> <span class="font-bold text-indigo-800">RWF {{ purchase_order.total_amount|floatformat:2 }}</span></p>
+                <p><strong>Status:</strong>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium
+                        {% if purchase_order.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                        {% elif purchase_order.status == 'Received' %}bg-green-100 text-green-800
+                        {% elif purchase_order.status == 'Cancelled' %}bg-red-100 text-red-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ purchase_order.status }}
+                    </span>
+                </p>
+                <p><strong>Created By:</strong> {{ purchase_order.created_by.username|default:"N/A" }}</p>
+            </div>
+        </div>
+        {% if purchase_order.notes %}
+            <p class="mt-4 text-gray-700"><strong>Notes:</strong> {{ purchase_order.notes }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Purchase Order Items Section -->
+    <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Order Items</h2>
+    {% if purchase_order_items %}
+        <div class="overflow-x-auto mb-6">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Product</th>
+                        <th class="py-3 px-6 text-right">Quantity</th>
+                        <th class="py-3 px-6 text-right">Unit Price (RWF)</th>
+                        <th class="py-3 px-6 text-right">Subtotal (RWF)</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for item in purchase_order_items %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ item.product.name }}</td>
+                        <td class="py-3 px-6 text-right">{{ item.quantity }}</td>
+                        <td class="py-3 px-6 text-right">{{ item.unit_price|floatformat:2 }}</td>
+                        <td class="py-3 px-6 text-right">{{ item.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center p-4 bg-gray-50 rounded-lg border border-gray-200">No items found for this purchase order.</p>
+    {% endif %}
+
+    <!-- Actions Section -->
+    <div class="mt-8 text-center flex flex-wrap justify-center gap-4">
+        {% if purchase_order.status == 'Pending' %}
+            <form action="{% url 'inventory:receive_purchase_order' purchase_order.id %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md">
+                    Mark as Received
+                </button>
+            </form>
+        {% endif %}
+        <a href="{% url 'inventory:purchase_order_list' %}" class="inline-block bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-md">Back to All POs</a>
+        <a href="{% url 'accounts:stock_manager_dashboard' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors shadow-md">Back to Stock Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

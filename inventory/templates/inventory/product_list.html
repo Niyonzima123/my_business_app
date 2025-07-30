@@ -1,0 +1,49 @@
+<!-- my_business_app/inventory/templates/inventory/product_list.html -->
+{% extends 'base.html' %} {# This tells Django to use base.html as the layout #}
+{% load static %} {# Load static files (though not strictly needed for media files, good practice) #}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Our Products</h1>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% for product in products %}
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+        {# Conditional display of product image #}
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover object-center">
+        {% else %}
+            {# Placeholder image if no image is uploaded #}
+            <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                No Image Available
+            </div>
+        {% endif %}
+        
+        <div class="p-4">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ product.name }}</h2>
+            <p class="text-gray-600 text-sm mb-3">{{ product.description|truncatechars:100 }}</p>
+            <p class="text-indigo-700 font-bold text-lg mb-2">RWF {{ product.price|floatformat:2 }}</p>
+
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-500">Category: {{ product.category.name|default:"N/A" }}</span>
+                {% if product.stock_quantity <= product.reorder_level and product.stock_quantity > 0 %}
+                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Low Stock ({{ product.stock_quantity }})</span>
+                {% elif product.stock_quantity <= 0 %}
+                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Out of Stock</span>
+                {% else %}
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">In Stock ({{ product.stock_quantity }})</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="bg-gray-50 p-4 border-t border-gray-200">
+            <button class="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors duration-300">
+                View Details
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center p-8 bg-white rounded-xl shadow-md text-gray-600">
+        <p class="text-lg">No products available yet. Please add some products via the <a href="{% url 'admin:index' %}" class="text-indigo-600 hover:underline">Admin Panel</a>.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock content %}

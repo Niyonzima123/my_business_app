@@ -1,0 +1,114 @@
+<!-- my_business_app/inventory/templates/inventory/low_stock_email.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low Stock Alert</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            width: 100% !important;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .header {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .content p {
+            margin-bottom: 15px;
+        }
+        .product-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .product-list li {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .product-list li:last-child {
+            border-bottom: none;
+        }
+        .product-list li strong {
+            color: #4f46e5;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4f46e5;
+            color: #ffffff !important;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ app_name }} - Low Stock Alert!</h1>
+        </div>
+        <div class="content">
+            <p>Dear Team,</p>
+            <p>This is an automated notification from **{{ app_name }}** to inform you that the following products are currently running low on stock:</p>
+            
+            <ul class="product-list">
+                {% for product in low_stock_products %}
+                    <li>
+                        <span><strong>{{ product.name }}</strong></span>
+                        <span>Current Stock: {{ product.stock_quantity }} / Reorder Level: {{ product.reorder_level }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <p>Please take appropriate action to reorder these items as soon as possible to avoid running out of stock.</p>
+            <p style="text-align: center;">
+                <a href="http://127.0.0.1:8000/inventory/low-stock-alerts/" class="button">View Low Stock Alerts in App</a>
+            </p>
+            <p>Thank you,<br>Your Inventory Management System</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated email. Please do not reply.</p>
+            <p>&copy; {{ "now"|date:"Y" }} {{ app_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

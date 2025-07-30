@@ -1,0 +1,65 @@
+<!-- my_business_app/inventory/templates/inventory/low_stock_alerts.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Low Stock Alerts</h1>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-4xl mx-auto border border-blue-200">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700">Products Below Reorder Level</h2>
+    </div>
+
+    {% if messages %}
+        <ul class="mb-4 space-y-2">
+            {% for message in messages %}
+                <li class="p-3 rounded-lg text-sm font-medium text-center
+                    {% if message.tags == 'error' %}bg-red-100 text-red-700
+                    {% elif message.tags == 'success' %}bg-green-100 text-green-700
+                    {% elif message.tags == 'info' %}bg-blue-100 text-blue-700
+                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if low_stock_products %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Product Name</th>
+                        <th class="py-3 px-6 text-left">Category</th>
+                        <th class="py-3 px-6 text-right">Current Stock</th>
+                        <th class="py-3 px-6 text-right">Reorder Level</th>
+                        <th class="py-3 px-6 text-left">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for product in low_stock_products %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ product.name }}</td>
+                        <td class="py-3 px-6 text-left">{{ product.category.name|default:"N/A" }}</td>
+                        <td class="py-3 px-6 text-right font-semibold text-red-600">{{ product.stock_quantity }}</td>
+                        <td class="py-3 px-6 text-right">{{ product.reorder_level }}</td>
+                        <td class="py-3 px-6 text-left">
+                            <a href="{% url 'inventory:create_purchase_order' %}" class="text-blue-600 hover:underline text-xs font-semibold">Create PO</a>
+                            <span class="text-gray-400 mx-1">|</span>
+                            <a href="{% url 'inventory:add_stock' %}" class="text-green-600 hover:underline text-xs font-semibold">Add Stock</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center p-4 bg-gray-50 rounded-lg border border-gray-200">No products are currently below their reorder level. Good job!</p>
+    {% endif %}
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'accounts:stock_manager_dashboard' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors">Back to Stock Dashboard</a>
+        <a href="{% url 'accounts:owner_dashboard' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors ml-2">Back to Owner Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

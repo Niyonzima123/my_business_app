@@ -1,0 +1,82 @@
+<!-- my_business_app/inventory/templates/inventory/purchase_order_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Purchase Orders</h1>
+
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-5xl mx-auto border border-blue-200">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700">All Purchase Orders</h2>
+        <a href="{% url 'inventory:create_purchase_order' %}" class="bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-md">Create New PO</a>
+    </div>
+
+    {% if messages %}
+        <ul class="mb-4 space-y-2">
+            {% for message in messages %}
+                <li class="p-3 rounded-lg text-sm font-medium text-center
+                    {% if message.tags == 'error' %}bg-red-100 text-red-700
+                    {% elif message.tags == 'success' %}bg-green-100 text-green-700
+                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if purchase_orders %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">PO ID</th>
+                        <th class="py-3 px-6 text-left">Supplier</th>
+                        <th class="py-3 px-6 text-left">Order Date</th>
+                        <th class="py-3 px-6 text-left">Delivery Date</th>
+                        <th class="py-3 px-6 text-right">Total Amount (RWF)</th>
+                        <th class="py-3 px-6 text-left">Status</th>
+                        <th class="py-3 px-6 text-left">Created By</th>
+                        <th class="py-3 px-6 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for po in purchase_orders %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ po.id }}</td>
+                        <td class="py-3 px-6 text-left">{{ po.supplier.name }}</td>
+                        <td class="py-3 px-6 text-left">{{ po.order_date|date:"Y-m-d" }}</td>
+                        <td class="py-3 px-6 text-left">{{ po.expected_delivery_date|date:"Y-m-d" }}</td>
+                        <td class="py-3 px-6 text-right">{{ po.total_amount|floatformat:2 }}</td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                {% if po.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif po.status == 'Received' %}bg-green-100 text-green-800
+                                {% elif po.status == 'Cancelled' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ po.status }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-left">{{ po.created_by.username|default:"N/A" }}</td>
+                        <td class="py-3 px-6 text-left flex items-center space-x-2">
+                            <a href="{% url 'inventory:purchase_order_detail' po.id %}" class="text-blue-600 hover:underline text-xs font-semibold">View Details</a>
+                            {% if po.status == 'Pending' %}
+                                <form action="{% url 'inventory:receive_purchase_order' po.id %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-green-600 hover:underline text-xs font-semibold border-none bg-transparent cursor-pointer">Receive</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center p-4 bg-gray-50 rounded-lg border border-gray-200">No purchase orders found. Create one to get started!</p>
+    {% endif %}
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'accounts:stock_manager_dashboard' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors">Back to Stock Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

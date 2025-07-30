@@ -1,0 +1,46 @@
+<!-- my_business_app/accounts/templates/accounts/stock_manager_dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-4xl mx-auto border border-blue-200 text-center">
+    <h1 class="text-4xl font-extrabold text-indigo-800 mb-6">Welcome, {{ user.username }}!</h1>
+    <p class="text-lg text-gray-700 mb-8">You are logged in as a <span class="font-semibold text-indigo-600">{{ user_role }}</span>.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Inventory Management Card -->
+        <div class="bg-green-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-green-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Inventory Icon">📦</span>
+            <h3 class="text-2xl font-semibold text-green-800 mb-3">Inventory Operations</h3>
+            <p class="text-gray-700 mb-4">Manage product stock levels and adjustments.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'inventory:add_stock' %}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">Add Stock</a>
+                <a href="{% url 'inventory:create_stock_adjustment' %}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">Adjust Stock</a>
+                <a href="{% url 'inventory:low_stock_alerts' %}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">Low Stock Alerts</a>
+            </div>
+        </div>
+
+        <!-- Supplier & Purchase Orders Card -->
+        <div class="bg-purple-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-purple-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Supplier Icon">🚚</span>
+            <h3 class="text-2xl font-semibold text-purple-800 mb-3">Supplier & POs</h3>
+            <p class="text-gray-700 mb-4">Handle purchase orders and supplier information.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'inventory:supplier_list' %}" class="inline-block bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors">View Suppliers</a>
+                <a href="{% url 'inventory:create_purchase_order' %}" class="inline-block bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors">Create PO</a>
+                <a href="{% url 'inventory:purchase_order_list' %}" class="inline-block bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors">View All POs</a>
+            </div>
+        </div>
+
+        <!-- Product Management Admin Card -->
+        <div class="bg-blue-50 p-6 rounded-lg shadow-md flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-200 ease-in-out border border-blue-200">
+            <span class="text-5xl mb-4" role="img" aria-label="Product Icon">🏷️</span>
+            <h3 class="text-2xl font-semibold text-blue-800 mb-3">Product Admin</h3>
+            <p class="text-gray-700 mb-4">Direct access to product management in admin.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-auto">
+                <a href="{% url 'admin:inventory_product_changelist' %}" class="inline-block bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Manage Products</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
