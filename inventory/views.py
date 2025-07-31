@@ -6,9 +6,9 @@ from django.urls import reverse
 from django.db import transaction
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Count, Q
 from django.db.models.functions import TruncDate
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import csv
 
 from django.core.mail import send_mail
@@ -17,7 +17,8 @@ from django.conf import settings
 
 from .models import Product, Category, Sale, SaleItem, Supplier, PurchaseOrder, PurchaseOrderItem, StockAdjustment, Customer
 from accounts.models import EmployeeProfile
-from accounts.forms import AddStockForm
+from django.contrib.auth.models import User
+from accounts.forms import AddStockForm # Import AddStockForm
 from .forms import SupplierForm, PurchaseOrderForm, PurchaseOrderItemFormSet, StockAdjustmentForm, CustomerForm
 
 
@@ -96,6 +97,7 @@ def pos_view(request):
                     customer.save()
 
                 messages.success(request, f'Sale #{sale.id} recorded successfully! Total: RWF {sale.total_amount:.2f}')
+                # Pass sale_id back for receipt generation
                 return JsonResponse({'status': 'success', 'message': 'Sale recorded successfully!', 'sale_id': sale.id})
 
         except Product.DoesNotExist:
@@ -121,6 +123,24 @@ def pos_view(request):
             'get_product_by_barcode_url': reverse('inventory:get_product_by_barcode'),
         }
         return render(request, 'inventory/pos.html', context)
+
+
+# --- NEW: Receipt View ---
+@login_required
+def receipt_view(request, sale_id):
+    sale = get_object_or_404(Sale.objects.select_related('user', 'customer'), id=sale_id)
+    sale_items = sale.saleitem_set.select_related('product').all()
+
+    context = {
+        'page_title': f'Receipt for Sale #{sale.id}',
+        'sale': sale,
+        'sale_items': sale_items,
+        'business_name': 'My Business App', # You can make this configurable in settings
+        'business_address': '123 Business St, City, Country', # Example
+        'business_phone': '+250 7XX XXX XXX', # Example
+        'business_email': 'info@mybusinessapp.com', # Example
+    }
+    return render(request, 'inventory/receipt.html', context)
 
 
 # --- Get Product by Barcode View (AJAX endpoint) ---
@@ -155,25 +175,29 @@ def get_product_by_barcode(request):
 @login_required
 @user_passes_test(lambda u: is_owner(u) or is_stock_manager(u), login_url='/accounts/login/')
 def add_stock_view(request):
-    if request.method == 'POST':
-        form = AddStockForm(request.POST)
-        if form.is_valid():
-            product = form.cleaned_data['product']
-            quantity_to_add = form.cleaned_data['quantity_to_add']
+    # Get all active products to populate the dropdown
+    products_queryset = Product.objects.filter(is_active=True).order_by('name')
 
-            product.stock_quantity += quantity_to_add
-            product.save()
+    if request.method == 'POST':
+        form = AddStockForm(request.POST, product_queryset=products_queryset) # Pass queryset to form
+        if form.is_valid():
+            with transaction.atomic():
+                product = form.cleaned_data['product']
+                quantity_to_add = form.cleaned_data['quantity_to_add']
+
+                product.stock_quantity += quantity_to_add
+                product.save()
 
             messages.success(request, f'Successfully added {quantity_to_add} to {product.name}. New stock: {product.stock_quantity}.')
             return redirect('inventory:add_stock')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = AddStockForm()
+        form = AddStockForm(product_queryset=products_queryset) # Pass queryset to form
 
     context = {
         'page_title': 'Add Product Stock',
-        'form': form
+        'form': form,
     }
     return render(request, 'inventory/add_stock.html', context)
 
@@ -191,78 +215,209 @@ def my_sales_view(request):
     return render(request, 'inventory/my_sales.html', context)
 
 
-# --- Sales Report View for Owners (with Chart Data) ---
+# --- Sales Report View for Owners (with Chart Data, Filters, and Stats) ---
 @login_required
 @user_passes_test(is_owner, login_url='/accounts/login/')
 def sales_report_view(request):
-    days_ago = int(request.GET.get('days', 30))
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days_ago)
+    # Default date range: last 30 days
+    today = date.today()
+    start_date = today - timedelta(days=30)
+    end_date = today
 
-    daily_sales = Sale.objects.filter(
-        sale_date__range=(start_date, end_date)
-    ).annotate(
+    # Get filters from GET parameters
+    filter_start_date_str = request.GET.get('start_date')
+    filter_end_date_str = request.GET.get('end_date')
+    filter_period = request.GET.get('period', 'last_30_days')
+    filter_employee_id = request.GET.get('employee_id')
+
+    # Apply period filter first if specified
+    if filter_period == 'today':
+        start_date = today
+        end_date = today
+    elif filter_period == 'last_7_days':
+        start_date = today - timedelta(days=6)
+        end_date = today
+    elif filter_period == 'last_30_days':
+        start_date = today - timedelta(days=29)
+        end_date = today
+    elif filter_period == 'this_month':
+        start_date = today.replace(day=1)
+        end_date = today
+    elif filter_period == 'last_month':
+        first_day_current_month = today.replace(day=1)
+        end_date = first_day_current_month - timedelta(days=1)
+        start_date = end_date.replace(day=1)
+    elif filter_period == 'this_year':
+        start_date = today.replace(month=1, day=1)
+        end_date = today
+    elif filter_period == 'all_time':
+        start_date = datetime.min.date()
+        end_date = today
+
+    # Override with custom date range if provided and valid
+    if filter_start_date_str:
+        try:
+            start_date = datetime.strptime(filter_start_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid start date format. Please use YYYY-MM-DD.")
+    if filter_end_date_str:
+        try:
+            end_date = datetime.strptime(filter_end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid end date format. Please use YYYY-MM-DD.")
+
+    # Ensure end_date includes the entire day for filtering
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
+
+    # Build query for sales
+    sales_query = Sale.objects.filter(sale_date__range=(start_datetime, end_datetime))
+
+    if filter_employee_id:
+        try:
+            employee_user = User.objects.get(id=filter_employee_id)
+            sales_query = sales_query.filter(user=employee_user)
+        except User.DoesNotExist:
+            messages.error(request, "Selected employee not found.")
+            filter_employee_id = None
+
+    # Fetch individual sales for display
+    individual_sales = sales_query.select_related('user', 'customer').order_by('-sale_date')
+
+    # Calculate summary statistics
+    total_sales_amount = individual_sales.aggregate(total_sum=Sum('total_amount'))['total_sum'] or 0
+    total_transactions = individual_sales.count()
+    average_sale_value = (total_sales_amount / total_transactions) if total_transactions > 0 else 0
+
+    # Prepare data for daily sales chart
+    daily_sales_chart_data = sales_query.annotate(
         date=TruncDate('sale_date')
     ).values('date').annotate(
         total_sales=Sum('total_amount')
     ).order_by('date')
 
-    chart_labels = [sale['date'].strftime('%Y-%m-%d') for sale in daily_sales]
-    chart_data = [float(sale['total_sales']) for sale in daily_sales]
+    chart_labels = [entry['date'].strftime('%Y-%m-%d') for entry in daily_sales_chart_data]
+    chart_data = [float(entry['total_sales']) for entry in daily_sales_chart_data]
+
+    # Get all employees (users with EmployeeProfile) for the filter dropdown
+    employees = User.objects.filter(employeeprofile__isnull=False).order_by('username')
 
     context = {
         'page_title': 'Sales Report',
-        'daily_sales': daily_sales,
-        'days_ago': days_ago,
+        'individual_sales': individual_sales,
+        'total_sales_amount': total_sales_amount,
+        'total_transactions': total_transactions,
+        'average_sale_value': average_sale_value,
         'chart_labels': chart_labels,
         'chart_data': chart_data,
+        'employees': employees,
+        'selected_start_date': start_date.strftime('%Y-%m-%d'),
+        'selected_end_date': end_date.strftime('%Y-%m-%d'),
+        'selected_period': filter_period,
+        'selected_employee_id': filter_employee_id,
     }
     return render(request, 'inventory/sales_report.html', context)
 
 
-# --- Export Sales CSV View ---
+# --- Export Sales CSV View (Enhanced to use same filters) ---
 @login_required
 @user_passes_test(is_owner, login_url='/accounts/login/')
-def export_sales_csv(request, period):
+def export_sales_csv(request):
     response = HttpResponse(content_type='text/csv')
-    filename = f"sales_report_{period}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = f"sales_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
 
-    writer.writerow(['Sale ID', 'Sale Date', 'Total Amount (RWF)', 'Processed By', 'Product Name', 'Quantity', 'Unit Price', 'Subtotal'])
+    writer.writerow(['Sale ID', 'Sale Date', 'Total Amount (RWF)', 'Processed By', 'Customer Name', 'Product Name', 'Quantity', 'Unit Price', 'Subtotal'])
 
-    sales_data = Sale.objects.select_related('user').order_by('sale_date')
+    # Replicate filtering logic from sales_report_view
+    today = date.today()
+    start_date = today - timedelta(days=30)
+    end_date = today
 
-    end_date = datetime.now()
-    if period == 'daily':
-        start_date = end_date - timedelta(days=1)
-    elif period == 'weekly':
-        start_date = end_date - timedelta(weeks=1)
-    elif period == 'monthly':
-        start_date = end_date - timedelta(days=30)
-    else:
-        start_date = datetime.min
+    filter_start_date_str = request.GET.get('start_date')
+    filter_end_date_str = request.GET.get('end_date')
+    filter_period = request.GET.get('period', 'last_30_days')
+    filter_employee_id = request.GET.get('employee_id')
 
-    sales_data = sales_data.filter(sale_date__range=(start_date, end_date))
+    if filter_period == 'today':
+        start_date = today
+        end_date = today
+    elif filter_period == 'last_7_days':
+        start_date = today - timedelta(days=6)
+        end_date = today
+    elif filter_period == 'last_30_days':
+        start_date = today - timedelta(days=29)
+        end_date = today
+    elif filter_period == 'this_month':
+        start_date = today.replace(day=1)
+        end_date = today
+    elif filter_period == 'last_month':
+        first_day_current_month = today.replace(day=1)
+        end_date = first_day_current_month - timedelta(days=1)
+        start_date = end_date.replace(day=1)
+    elif filter_period == 'this_year':
+        start_date = today.replace(month=1, day=1)
+        end_date = today
+    elif filter_period == 'all_time':
+        start_date = datetime.min.date()
+        end_date = today
+
+    if filter_start_date_str:
+        try:
+            start_date = datetime.strptime(filter_start_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+    if filter_end_date_str:
+        try:
+            end_date = datetime.strptime(filter_end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
+
+    sales_data_query = Sale.objects.filter(sale_date__range=(start_datetime, end_datetime))
+
+    if filter_employee_id:
+        try:
+            employee_user = User.objects.get(id=filter_employee_id)
+            sales_data_query = sales_data_query.filter(user=employee_user)
+        except User.DoesNotExist:
+            pass
+
+    sales_data = sales_data_query.select_related('user', 'customer').prefetch_related('saleitem_set__product').order_by('sale_date')
 
     for sale in sales_data:
-        processed_by_username = sale.user.username if sale.user else 'N/A (User Deleted/Missing)'
+        processed_by_username = sale.user.username if sale.user else 'N/A'
+        customer_name = sale.customer.get_full_name() if sale.customer else 'Walk-in Customer'
         
-        for item in sale.saleitem_set.all():
+        if sale.saleitem_set.exists():
+            for item in sale.saleitem_set.all():
+                writer.writerow([
+                    sale.id,
+                    sale.sale_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    f"{sale.total_amount:.2f}",
+                    processed_by_username,
+                    customer_name,
+                    item.product.name,
+                    item.quantity,
+                    f"{item.unit_price:.2f}",
+                    f"{item.subtotal:.2f}"
+                ])
+        else:
             writer.writerow([
                 sale.id,
                 sale.sale_date.strftime('%Y-%m-%d %H:%M:%S'),
                 f"{sale.total_amount:.2f}",
                 processed_by_username,
-                item.product.name,
-                item.quantity,
-                f"{item.unit_price:.2f}",
-                f"{item.subtotal:.2f}"
+                customer_name,
+                'No Items', 0, 0.00, 0.00
             ])
     return response
 
-# --- Low Stock Alerts View ---
+# --- Low Stock Alerts View (UPDATED to send email) ---
 @login_required
 @user_passes_test(lambda u: is_owner(u) or is_stock_manager(u), login_url='/accounts/login/')
 def low_stock_alerts_view(request):
@@ -502,32 +657,38 @@ def create_customer_view(request):
     return render(request, 'inventory/create_customer.html', context)
 
 
-# --- Customer Detail and Purchase History View ---
+# --- Employee Sales Report View ---
+@login_required
+@user_passes_test(is_owner, login_url='/accounts/login/')
+def employee_sales_report_view(request):
+    employee_sales = Sale.objects.filter(
+        user__isnull=False
+    ).values(
+        'user__username',
+        'user__employeeprofile__role'
+    ).annotate(
+        total_sales_amount=Sum('total_amount'),
+        total_sales_count=Count('id')
+    ).order_by('-total_sales_amount')
+
+    context = {
+        'page_title': 'Employee Sales Performance',
+        'employee_sales': employee_sales,
+    }
+    return render(request, 'inventory/employee_sales_report.html', context)
+
+
+# --- Customer Purchase History View ---
 @login_required
 @user_passes_test(lambda u: is_owner(u) or is_cashier(u), login_url='/accounts/login/')
-def customer_detail_view(request, pk):
+def customer_purchase_history_view(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
-    # Fetch all sales related to this customer, ordered by most recent
-    customer_sales = Sale.objects.filter(customer=customer).order_by('-sale_date')
+    
+    sales_history = Sale.objects.filter(customer=customer).select_related('user').order_by('-sale_date')
 
     context = {
-        'page_title': f'Customer: {customer.get_full_name()}',
+        'page_title': f'Purchase History for {customer.get_full_name()}',
         'customer': customer,
-        'customer_sales': customer_sales,
+        'sales_history': sales_history,
     }
-    return render(request, 'inventory/customer_detail.html', context)
-
-
-# --- Receipt View ---
-@login_required
-@user_passes_test(is_cashier, login_url='/accounts/login/') # Cashiers and Owners can view receipts
-def receipt_view(request, sale_id):
-    sale = get_object_or_404(Sale.objects.select_related('user', 'customer'), id=sale_id)
-    sale_items = sale.saleitem_set.select_related('product').all()
-
-    context = {
-        'page_title': f'Receipt for Sale #{sale.id}',
-        'sale': sale,
-        'sale_items': sale_items,
-    }
-    return render(request, 'inventory/receipt.html', context)
+    return render(request, 'inventory/customer_purchase_history.html', context)
