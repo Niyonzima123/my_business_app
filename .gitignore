@@ -15,13 +15,13 @@ venv/
 ENV/
 env/
 
+# Static & Media (optional, used during development)
+staticfiles/
+media/
+
 # VS Code
 .vscode/
 
-# System
+# System Files
 .DS_Store
 Thumbs.db
-
-# Static and media (optional if using cloud)
-staticfiles/
-media/
