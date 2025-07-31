@@ -25,6 +25,9 @@ SECRET_KEY = 'django-insecure-##p)weclayn1y0f31+i2(cp4exd&3i%=+zh)lcbc@ce-pleu(*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
+ALLOWED_HOSTS = ['*']
+
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
@@ -175,3 +178,13 @@ STATIC_URL = 'static/'
 # This is where uploaded files will be stored.
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+import dj_database_url
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+
+import os
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
