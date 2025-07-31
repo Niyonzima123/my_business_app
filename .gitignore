@@ -15,7 +15,7 @@ venv/
 ENV/
 env/
 
-# Static & Media (optional, used during development)
+# Static & Media (optional)
 staticfiles/
 media/
 
