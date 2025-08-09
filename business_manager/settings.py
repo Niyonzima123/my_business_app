@@ -1,14 +1,18 @@
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file (for local development)
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-##p)weclayn1y0f31+i2(cp4exd&3i%=+zh)lcbc@ce-pleu(*')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'your-local-secret-key-for-development')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# The `if` statement correctly sets DEBUG to False on Render
 DEBUG = 'RENDER' not in os.environ
 
 ALLOWED_HOSTS = []
@@ -61,6 +65,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'business_manager.wsgi.application'
 
 # Database
+# This configuration dynamically switches between your local database and the Render environment variable.
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
@@ -110,20 +115,3 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Email Configuration for Notifications
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Superuser credentials for temporary deployment setup
-DJANGO_SUPERUSER_USERNAME = os.environ.get('DJANGO_SUPERUSER_USERNAME')
-DJANGO_SUPERUSER_EMAIL = os.environ.get('DJANGO_SUPERUSER_EMAIL')
-DJANGO_SUPERUSER_PASSWORD = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
-
-
-
-
-# settings.py
-import os
-import dj_database_url
-from dotenv import load_dotenv
-
-load_dotenv() # Load environment variables from .env file
-
-# ... (the rest of your settings)
