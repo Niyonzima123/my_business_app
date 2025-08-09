@@ -122,3 +122,12 @@ DJANGO_SUPERUSER_PASSWORD = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
 # Media files (user-uploaded content like product images)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# settings.py
+import os
+import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
+
+# ... (the rest of your settings)
