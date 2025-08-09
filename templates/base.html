@@ -35,7 +35,7 @@
             <!-- Logo/App Name Section -->
             <a href="{% url 'inventory:product_list' %}" class="flex items-center space-x-3 text-white text-2xl font-bold rounded-lg px-3 py-1 hover:bg-indigo-700 transition-colors">
                 {# Removed img tag for logo #}
-                <span>My Business App</span>
+                <span>See Available products</span>
             </a>
 
             <!-- Navigation Links Section -->
@@ -46,7 +46,7 @@
                         {# Links for Owners #}
                         {% if user_role == 'Owner' %}
                             <a href="{% url 'accounts:owner_dashboard' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Dashboard</a>
-                            <a href="{% url 'inventory:pos_view' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">POS</a>
+                            <a href="{% url 'inventory:pos_view' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Selling part</a>
                             <a href="{% url 'accounts:sales_report' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Sales Reports</a>
                             <a href="{% url 'inventory:product_performance_report' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Product Performance</a>
                             <a href="{% url 'inventory:employee_sales_report' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Employee Sales</a>
@@ -101,7 +101,7 @@
     <!-- Footer -->
     <footer class="bg-gray-800 text-white text-center p-4 mt-8">
         <div class="container mx-auto">
-            <p>&copy; {{"now"|date:"Y"}} My Business App. All rights reserved.</p>
+            <p>&copy; {{"now"|date:"Y"}} Rwandan business app. All rights reserved.</p>
         </div>
     </footer>
 </body>
