@@ -24,10 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # ... your existing apps
-    "django_createsuperuserwithpassword",
-
     # My custom apps
     'inventory',
     'accounts',
@@ -65,14 +61,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'business_manager.wsgi.application'
 
 # Database
-# This configuration dynamically switches between your local database and the Render environment variable.
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600
     )
 }
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -117,13 +111,7 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 # Email Configuration for Notifications
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# business_manager/settings.py
-
-# ... (your existing code)
-
 # Superuser credentials for temporary deployment setup
 DJANGO_SUPERUSER_USERNAME = os.environ.get('DJANGO_SUPERUSER_USERNAME')
 DJANGO_SUPERUSER_EMAIL = os.environ.get('DJANGO_SUPERUSER_EMAIL')
 DJANGO_SUPERUSER_PASSWORD = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
-
-# ... (the rest of your settings)
