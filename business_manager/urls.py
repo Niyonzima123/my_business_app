@@ -19,6 +19,9 @@ Including another URLconf
 # business_manager/urls.py
 from django.contrib import admin
 from django.urls import path, include
+from django.urls import re_path
+from django.views.static import serve
+
 from django.conf import settings # Import settings
 from django.conf.urls.static import static # Import static helper
 
@@ -26,6 +29,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('inventory.urls')), # Include inventory app URLs for the root path
     path('accounts/', include('accounts.urls')), # Include accounts app URLs
+    # This is the crucial part for serving media files on Render
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    
 ]
 
 # Serve media files during development
