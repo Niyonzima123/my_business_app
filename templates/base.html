@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"My Business App" }}</title>
+    <title>{{ page_title|default:"See Available products" }}</title>
     <!-- Link to Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -58,7 +58,7 @@
                             <a href="{% url 'admin:auth_user_changelist' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Users Admin</a>
                         {# Links for Cashiers #}
                         {% elif user_role == 'Cashier' %}
-                            <a href="{% url 'inventory:pos_view' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">POS</a>
+                            <a href="{% url 'inventory:pos_view' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Selling part</a>
                             <a href="{% url 'inventory:my_sales' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">My Sales</a>
                             <a href="{% url 'inventory:customer_list' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Customers</a>
                         {# Links for Stock Managers #}
