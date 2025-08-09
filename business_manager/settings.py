@@ -69,6 +69,7 @@ DATABASES = {
     )
 }
 
+#postgresql://business_db_ugor_user:FbMR3ros70k8F7t9NpRDixaK8dDV82a6@dpg-d2blv6buibrs73fo79cg-a/business_db_ugor
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
