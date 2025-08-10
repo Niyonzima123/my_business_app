@@ -115,3 +115,8 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Email Configuration for Notifications
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

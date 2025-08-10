@@ -1,18 +1,19 @@
 # inventory/urls.py
 from django.urls import path
 from . import views
-from django.db.models import Count
 
 app_name = 'inventory'
 
 urlpatterns = [
+    # General URLs
     path('', views.product_list, name='product_list'),
     path('pos/', views.pos_view, name='pos_view'),
     path('add-stock/', views.add_stock_view, name='add_stock'),
     path('my-sales/', views.my_sales_view, name='my_sales'),
     path('low-stock-alerts/', views.low_stock_alerts_view, name='low_stock_alerts'),
+    path('receipt/<int:sale_id>/', views.receipt_view, name='receipt_view'),
 
-    # Supplier Management URLs
+    # Supplier & Purchase Order Management URLs
     path('suppliers/', views.supplier_list_view, name='supplier_list'),
     path('purchase-orders/create/', views.create_purchase_order_view, name='create_purchase_order'),
     path('purchase-orders/', views.purchase_order_list_view, name='purchase_order_list'),
@@ -34,7 +35,4 @@ urlpatterns = [
 
     # Barcode Integration URL
     path('api/get-product-by-barcode/', views.get_product_by_barcode, name='get_product_by_barcode'),
-
-    # NEW: Receipt URL
-    path('receipt/<int:sale_id>/', views.receipt_view, name='receipt_view'),
 ]

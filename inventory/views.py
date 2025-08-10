@@ -11,6 +11,8 @@ from django.db.models.functions import TruncDate
 from datetime import datetime, timedelta, date
 import csv
 
+from django.utils import timezone  # <-- ADDED THIS IMPORT
+
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -93,7 +95,7 @@ def pos_view(request):
                 sale.save()
 
                 if customer:
-                    customer.last_purchase = datetime.now()
+                    customer.last_purchase = timezone.now() # <-- CORRECTED LINE
                     customer.save()
 
                 messages.success(request, f'Sale #{sale.id} recorded successfully! Total: RWF {sale.total_amount:.2f}')
