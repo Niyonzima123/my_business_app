@@ -1,4 +1,3 @@
-<!-- my_business_app/templates/base.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -6,103 +5,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page_title|default:"See Available products" }}</title>
-    <!-- Link to Tailwind CSS CDN for styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for the Inter font and general body */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Light blue-gray background */
-            min-height: 100vh; /* Ensure body takes full viewport height */
+            background-color: #f8fafc;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column; /* For sticky footer */
+            flex-direction: column;
         }
-        /* Basic styling for focus states to ensure accessibility */
-        input:focus, button:focus, select:focus, textarea:focus {
-            outline: 2px solid theme('colors.indigo.500');
-            outline-offset: 2px;
-        }
-        /* Ensure main content takes available space for sticky footer */
-        main {
-            flex-grow: 1;
-        }
+        main { flex-grow: 1; }
     </style>
 </head>
 <body class="text-gray-800">
-    <!-- Navigation Bar - Enhanced Design -->
-    <nav class="bg-gradient-to-r from-indigo-700 to-indigo-900 p-4 shadow-xl">
-        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            <!-- Logo/App Name Section -->
-            <a href="{% url 'inventory:product_list' %}" class="flex items-center space-x-3 text-white text-2xl font-bold rounded-lg px-3 py-1 hover:bg-indigo-700 transition-colors">
-                {# Removed img tag for logo #}
-                <span>Available products</span>
-            </a>
 
-            <!-- Navigation Links Section -->
-            <div class="flex justify-center sm:justify-end items-center gap-x-4 gap-y-2"> {# Removed flex-wrap #}
-                {% if user.is_authenticated %}
-                    {# Get user role for dynamic navigation #}
-                    {% with user_role=user.employeeprofile.role|default:'N/A' %}
-                        {# Links for Owners #}
-                        {% if user_role == 'Owner' %}
-                            <a href="{% url 'accounts:owner_dashboard' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Dashboard</a>
-                            <a href="{% url 'inventory:pos_view' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Selling part</a>
-                            <a href="{% url 'accounts:sales_report' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Sales Reports</a>
-                            <a href="{% url 'inventory:product_performance_report' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Product Performance</a>
-                            <a href="{% url 'inventory:employee_sales_report' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Employee Sales</a>
-                            <a href="{% url 'inventory:supplier_list' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Suppliers</a>
-                            <a href="{% url 'inventory:purchase_order_list' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Purchase Orders</a>
-                            <a href="{% url 'inventory:create_stock_adjustment' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Adjust Stock</a>
-                            <a href="{% url 'inventory:customer_list' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Customers</a>
-                            <a href="{% url 'admin:inventory_product_changelist' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Products Admin</a>
-                            <a href="{% url 'admin:auth_user_changelist' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Users Admin</a>
-                        {# Links for Cashiers #}
-                        {% elif user_role == 'Cashier' %}
-                            <a href="{% url 'inventory:pos_view' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Selling part</a>
-                            <a href="{% url 'inventory:my_sales' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">My Sales</a>
-                            <a href="{% url 'inventory:customer_list' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Customers</a>
-                        {# Links for Stock Managers #}
-                        {% elif user_role == 'Stock Manager' %}
-                            <a href="{% url 'accounts:stock_manager_dashboard' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Stock Dashboard</a>
-                            <a href="{% url 'inventory:add_stock' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Add Stock</a>
-                            <a href="{% url 'inventory:low_stock_alerts' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Low Stock Alerts</a>
-                            <a href="{% url 'inventory:supplier_list' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Suppliers</a>
-                            <a href="{% url 'inventory:purchase_order_list' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Purchase Orders</a>
-                            <a href="{% url 'inventory:create_stock_adjustment' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Adjust Stock</a>
-                            <a href="{% url 'admin:inventory_product_changelist' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Manage Products</a>
-                        {% endif %}
+<!-- Navbar -->
+<nav class="bg-gradient-to-r from-indigo-700 to-indigo-900 p-4 shadow-xl">
+    <div class="container mx-auto flex flex-wrap justify-between items-center">
+        
+        <!-- Logo -->
+        <a href="{% url 'inventory:product_list' %}" class="flex items-center space-x-3 text-white text-2xl font-bold rounded-lg px-3 py-1 hover:bg-indigo-700 transition-colors">
+            <span>Available products</span>
+        </a>
 
-                        {# Always show Admin link for staff/superusers and Logout for authenticated users #}
-                        {% if user.is_staff %}
-                            <a href="{% url 'admin:index' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Admin Panel</a>
-                        {% endif %}
-                        <form action="{% url 'accounts:logout' %}" method="post" class="inline">
-                            {% csrf_token %}
-                            <button type="submit" class="text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-600 transition-colors cursor-pointer border-none bg-transparent">
-                                Logout ({{ user.username }})
-                            </button>
-                        </form>
-                    {% endwith %}
-                {% else %}
-                    {# Links for unauthenticated users #}
-                    <a href="{% url 'accounts:login' %}" class="text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">Login</a>
-                {% endif %}
-            </div>
+        <!-- Hamburger Button (Mobile) -->
+        <button id="menu-toggle" class="text-white text-2xl sm:hidden focus:outline-none">
+            &#9776;
+        </button>
+
+        <!-- Navigation Links -->
+        <div id="menu" class="hidden w-full sm:flex sm:w-auto flex-col sm:flex-row items-start sm:items-center mt-4 sm:mt-0 space-y-2 sm:space-y-0 sm:space-x-4">
+            {% if user.is_authenticated %}
+                {% with user_role=user.employeeprofile.role|default:'N/A' %}
+                    {% if user_role == 'Owner' %}
+                        <a href="{% url 'accounts:owner_dashboard' %}" class="nav-link">Dashboard</a>
+                        <a href="{% url 'inventory:pos_view' %}" class="nav-link">Selling part</a>
+                        <a href="{% url 'accounts:sales_report' %}" class="nav-link">Sales Reports</a>
+                        <a href="{% url 'inventory:product_performance_report' %}" class="nav-link">Product Performance</a>
+                        <a href="{% url 'inventory:employee_sales_report' %}" class="nav-link">Employee Sales</a>
+                        <a href="{% url 'inventory:supplier_list' %}" class="nav-link">Suppliers</a>
+                        <a href="{% url 'inventory:purchase_order_list' %}" class="nav-link">Purchase Orders</a>
+                        <a href="{% url 'inventory:create_stock_adjustment' %}" class="nav-link">Adjust Stock</a>
+                        <a href="{% url 'inventory:customer_list' %}" class="nav-link">Customers</a>
+                        <a href="{% url 'admin:inventory_product_changelist' %}" class="nav-link">Products Admin</a>
+                        <a href="{% url 'admin:auth_user_changelist' %}" class="nav-link">Users Admin</a>
+                    {% elif user_role == 'Cashier' %}
+                        <a href="{% url 'inventory:pos_view' %}" class="nav-link">Selling part</a>
+                        <a href="{% url 'inventory:my_sales' %}" class="nav-link">My Sales</a>
+                        <a href="{% url 'inventory:customer_list' %}" class="nav-link">Customers</a>
+                    {% elif user_role == 'Stock Manager' %}
+                        <a href="{% url 'accounts:stock_manager_dashboard' %}" class="nav-link">Stock Dashboard</a>
+                        <a href="{% url 'inventory:add_stock' %}" class="nav-link">Add Stock</a>
+                        <a href="{% url 'inventory:low_stock_alerts' %}" class="nav-link">Low Stock Alerts</a>
+                        <a href="{% url 'inventory:supplier_list' %}" class="nav-link">Suppliers</a>
+                        <a href="{% url 'inventory:purchase_order_list' %}" class="nav-link">Purchase Orders</a>
+                        <a href="{% url 'inventory:create_stock_adjustment' %}" class="nav-link">Adjust Stock</a>
+                        <a href="{% url 'admin:inventory_product_changelist' %}" class="nav-link">Manage Products</a>
+                    {% endif %}
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin:index' %}" class="nav-link">Admin Panel</a>
+                    {% endif %}
+                    <form action="{% url 'accounts:logout' %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link">Logout ({{ user.username }})</button>
+                    </form>
+                {% endwith %}
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="nav-link">Login</a>
+            {% endif %}
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <!-- Main Content Area -->
-    <main class="container mx-auto p-6 mt-4"> {# Changed p-4 to p-6 for more padding #}
-        {% block content %}
-        <!-- Content from child templates will be inserted here -->
-        {% endblock content %}
-    </main>
+<!-- Main Content -->
+<main class="container mx-auto p-4 sm:p-6 mt-4">
+    {% block content %}
+    {% endblock content %}
+</main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
-        <div class="container mx-auto">
-            <p>&copy; {{"now"|date:"Y"}} Rwandan business app. All rights reserved.</p>
-        </div>
-    </footer>
+<!-- Footer -->
+<footer class="bg-gray-800 text-white text-center p-4 mt-8">
+    <div class="container mx-auto">
+        <p>&copy; {{"now"|date:"Y"}} Rwandan business app. All rights reserved.</p>
+    </div>
+</footer>
+
+<!-- JavaScript for Hamburger Menu -->
+<script>
+    document.getElementById('menu-toggle').addEventListener('click', function () {
+        document.getElementById('menu').classList.toggle('hidden');
+    });
+</script>
+
+<!-- Tailwind Custom Class for Nav Links -->
+<style>
+    .nav-link {
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: background-color 0.3s;
+        display: block;
+    }
+    .nav-link:hover {
+        background-color: rgba(99, 102, 241, 0.8);
+    }
+</style>
+
 </body>
 </html>
