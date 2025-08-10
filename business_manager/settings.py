@@ -1,3 +1,5 @@
+# business_manager/settings.py
+
 from pathlib import Path
 import os
 import dj_database_url
@@ -13,12 +15,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-local-secret-key-for-development')
 
 # The `if` statement correctly sets DEBUG to False on Render
-DEBUG = 'RENDER' not in os.environ
+DEBUG = os.environ.get('RENDER', 'False') == 'False'
 
 ALLOWED_HOSTS = []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+else:
+    # Set this for local development
+    ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 
 # Application definition
 INSTALLED_APPS = [
@@ -28,6 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'whitenoise.runserver_nostatic',  # Added for Whitenoise to handle static files in dev
+
     # My custom apps
     'inventory',
     'accounts',
@@ -65,13 +72,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'business_manager.wsgi.application'
 
 # Database
-# This configuration dynamically switches between your local database and the Render environment variable.
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
-    )
-}
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600
+        )
+    }
+else:
+    # Fallback to SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -97,9 +113,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 if not DEBUG:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (user-uploaded content like product images)
@@ -115,8 +132,3 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Email Configuration for Notifications
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-import os
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

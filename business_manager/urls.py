@@ -32,3 +32,21 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+
+    # business_manager/urls.py
+
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings  # <-- Make sure this is here
+from django.conf.urls.static import static  # <-- And this
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('inventory.urls')),
+    path('accounts/', include('accounts.urls')),
+]
+
+# This block serves media files ONLY when DEBUG is True
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
