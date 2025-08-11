@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+    {# Back to Products Button #}
+    <div class="mb-6">
+        <a href="{% url 'inventory:product_list' %}" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 0h18"></path></svg>
+            Back to Products
+        </a>
+    </div>
+
+    {# Product Detail Card #}
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden md:flex">
+        {# Product Image Section #}
+        <div class="md:w-1/2 p-6 flex items-center justify-center bg-gray-50 border-r border-gray-100">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="max-h-[500px] w-auto rounded-xl shadow-lg object-contain">
+            {% else %}
+                <img src="https://placehold.co/600x400/e2e8f0/64748b?text=No+Image" alt="No product image" class="w-full rounded-xl shadow-lg object-contain">
+            {% endif %}
+        </div>
+
+        {# Product Information Section #}
+        <div class="md:w-1/2 p-8 lg:p-12 space-y-6">
+            {# Header with Name and Price #}
+            <div>
+                <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-2">{{ product.name }}</h1>
+                <p class="text-4xl font-bold text-indigo-600">RWF {{ product.price|floatformat:2 }}</p>
+            </div>
+
+            <hr class="border-gray-200">
+
+            {# Product Details #}
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Product Description</h2>
+                <div class="text-gray-600 space-y-2">
+                    <p class="text-lg">{{ product.description|default:"No description available." }}</p>
+                </div>
+            </div>
+
+            {# Quantity Selector #}
+            {% if product.stock_quantity > 0 %}
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center border border-gray-300 rounded-md shadow-sm">
+                    <button type="button" onclick="decrementQuantity()" class="p-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                    </button>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock_quantity }}" class="w-16 text-center border-none focus:ring-0">
+                    <button type="button" onclick="incrementQuantity()" class="p-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <hr class="border-gray-200">
+
+            {# Social Media Sharing Buttons #}
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Share This Product</h2>
+                <div class="flex space-x-4">
+                    {% with product_url="https://yourwebsite.com"|add:"/product/"|add:product.id|add:"/"|urlencode %}
+                    <a href="https://twitter.com/intent/tweet?url={{ product_url }}&text=Check%20out%20this%20product:%20{{ product.name|urlencode }}%20" target="_blank" class="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18.244 2.25h3.308l-7.227 8.260L21.602 22h-6.195l-5.607-6.519L5.512 22H2.102l7.591-8.665L2.597 2.25H9.42L14.47 9.173L18.244 2.25h-.009zm-.088 1.488L9.422 19.81H3.843L11.58 3.738h6.576z"></path>
+                        </svg>
+                        Twitter
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ product_url }}" target="_blank" class="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.233V14.71h-3.365v-3.868h3.365V8.04c0-3.324 1.954-5.155 5.01-5.155 1.439 0 2.671.107 3.033.155v3.538l-2.09.001c-1.636 0-1.954.779-1.954 1.928v2.54h3.945l-.513 3.868h-3.432V24h6.002c.732 0 1.325-.593 1.325-1.325V1.325C24 .593 23.407 0 22.675 0z"></path>
+                        </svg>
+                        Facebook
+                    </a>
+                    {% endwith %}
+                </div>
+            </div>
+
+            {# Stock and Category #}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {# Stock Status #}
+                <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-500">Stock Status</span>
+                    {% if product.stock_quantity <= product.reorder_level and product.stock_quantity > 0 %}
+                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium mt-1 text-center w-full">Low Stock ({{ product.stock_quantity }})</span>
+                    {% elif product.stock_quantity <= 0 %}
+                        <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium mt-1 text-center w-full">Out of Stock</span>
+                    {% else %}
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mt-1 text-center w-full">In Stock ({{ product.stock_quantity }})</span>
+                    {% endif %}
+                </div>
+
+                {# Category #}
+                <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-500">Category</span>
+                    <span class="text-base text-gray-800 mt-1 px-3 py-1 bg-gray-100 rounded-full text-center w-full">{{ product.category.name|default:"N/A" }}</span>
+                </div>
+            </div>
+            
+            <hr class="border-gray-200">
+            
+            {# "Contact via WhatsApp" Section #}
+            <div class="mt-4">
+            {% if product.stock_quantity > 0 %}
+                <a href="https://wa.me/250782147772?text=Hello%20Admin,%0D%0AI%20am%20interested%20in%20purchasing%20the%20'{{ product.name }}'%20(Product%20ID:%20{{ product.id }}).%20Could%20we%20discuss%20the%20price%20and%20delivery%20details?%0D%0AThank%20you." 
+                    target="_blank" class="flex items-center justify-center w-full bg-green-500 text-white py-4 rounded-lg text-lg font-semibold text-center hover:bg-green-600 transition-colors duration-300">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.04 2.1c-5.59 0-10.13 4.54-10.13 10.13 0 1.98.58 3.86 1.63 5.51L2.1 22.02l4.4-1.15c1.69.93 3.63 1.45 5.54 1.45 5.59 0 10.13-4.54 10.13-10.13S17.63 2.1 12.04 2.1zm.04 18.42c-1.84 0-3.56-.5-5.07-1.38l-3.66.96.98-3.58a8.3 8.3 0 01-1.4-4.88c0-4.56 3.7-8.26 8.26-8.26 2.22 0 4.3.87 5.86 2.42s2.42 3.64 2.42 5.86c0 4.56-3.7 8.26-8.26 8.26zm4.1-6.19c-.23-.11-.97-.48-1.12-.53-.16-.05-.27-.07-.38.07-.12.16-.47.65-.58.78-.11.13-.23.15-.43.05-.2-.1-.84-.31-1.6-1-1.18-1.07-1.98-2.39-2.22-2.79-.24-.4-.03-.62.11-.75.1-.1.23-.26.34-.4.11-.13.15-.22.2-.38.05-.16.03-.3-.02-.42-.05-.13-.38-.97-.53-1.32-.14-.35-.29-.29-.4-.29-.11 0-.25-.01-.38-.01s-.34.03-.52.24c-.18.21-.69.67-.69 1.64 0 .97.71 1.9 1.15 2.44.44.54.85.78 1.14 1.15.29.37 2.2 3.55 3.55 4.88 1.34 1.33 1.34 1.95.16 2.65-.18.1-.53.2-1.03.22-.5.03-.97.03-1.81.01-.84-.02-1.38-.13-1.78-.29z"></path>
+                    </svg>
+                    Contact via WhatsApp
+                </a>
+            {% else %}
+                <button disabled class="flex items-center justify-center w-full bg-gray-400 text-white py-4 rounded-lg text-lg font-semibold text-center cursor-not-allowed">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.04 2.1c-5.59 0-10.13 4.54-10.13 10.13 0 1.98.58 3.86 1.63 5.51L2.1 22.02l4.4-1.15c1.69.93 3.63 1.45 5.54 1.45 5.59 0 10.13-4.54 10.13-10.13S17.63 2.1 12.04 2.1zm.04 18.42c-1.84 0-3.56-.5-5.07-1.38l-3.66.96.98-3.58a8.3 8.3 0 01-1.4-4.88c0-4.56 3.7-8.26 8.26-8.26 2.22 0 4.3.87 5.86 2.42s2.42 3.64 2.42 5.86c0 4.56-3.7 8.26-8.26 8.26zm4.1-6.19c-.23-.11-.97-.48-1.12-.53-.16-.05-.27-.07-.38.07-.12.16-.47.65-.58.78-.11.13-.23.15-.43.05-.2-.1-.84-.31-1.6-1-1.18-1.07-1.98-2.39-2.22-2.79-.24-.4-.03-.62.11-.75.1-.1.23-.26.34-.4.11-.13.15-.22.2-.38.05-.16.03-.3-.02-.42-.05-.13-.38-.97-.53-1.32-.14-.35-.29-.29-.4-.29-.11 0-.25-.01-.38-.01s-.34.03-.52.24c-.18.21-.69.67-.69 1.64 0 .97.71 1.9 1.15 2.44.44.54.85.78 1.14 1.15.29.37 2.2 3.55 3.55 4.88 1.34 1.33 1.34 1.95.16 2.65-.18.1-.53.2-1.03.22-.5.03-.97.03-1.81.01-.84-.02-1.38-.13-1.78-.29z"></path>
+                    </svg>
+                    Out of Stock
+                </button>
+            {% endif %} 
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{# Add JavaScript for quantity selector functionality #}
+<script>
+    function incrementQuantity() {
+        const quantityInput = document.getElementById('quantity');
+        let currentValue = parseInt(quantityInput.value);
+        const maxValue = parseInt(quantityInput.max);
+        
+        if (currentValue < maxValue) {
+            quantityInput.value = currentValue + 1;
+        }
+    }
+
+    function decrementQuantity() {
+        const quantityInput = document.getElementById('quantity');
+        let currentValue = parseInt(quantityInput.value);
+        const minValue = parseInt(quantityInput.min);
+
+        if (currentValue > minValue) {
+            quantityInput.value = currentValue - 1;
+        }
+    }
+</script>

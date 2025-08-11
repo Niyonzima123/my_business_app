@@ -1,4 +1,3 @@
-<!-- my_business_app/inventory/templates/inventory/create_purchase_order.html -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -22,7 +21,6 @@
     <form method="post" id="purchaseOrderForm" class="space-y-6">
         {% csrf_token %}
 
-        <!-- Purchase Order Details -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="{{ po_form.supplier.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
@@ -42,6 +40,15 @@
                     <p class="mt-1 text-sm text-red-600">{{ po_form.expected_delivery_date.errors }}</p>
                 {% endif %}
             </div>
+            <div>
+                <label for="{{ po_form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ po_form.status.label }}
+                </label>
+                {{ po_form.status }}
+                {% if po_form.status.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ po_form.status.errors }}</p>
+                {% endif %}
+            </div>
         </div>
         
         <div class="mb-4">
@@ -56,7 +63,6 @@
 
         <hr class="my-6 border-gray-200">
 
-        <!-- Purchase Order Items (Formset) -->
         <h3 class="text-2xl font-semibold text-indigo-700 mb-4">Order Items</h3>
         <div id="formset-container" class="space-y-4">
             {{ formset.management_form }}
@@ -78,6 +84,15 @@
                         {{ form.quantity }}
                         {% if form.quantity.errors %}
                             <p class="mt-1 text-sm text-red-600">{{ form.quantity.errors }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="w-full sm:w-1/4">
+                        <label for="{{ form.unit_cost.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.unit_cost.label }}
+                        </label>
+                        {{ form.unit_cost }}
+                        {% if form.unit_cost.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.unit_cost.errors }}</p>
                         {% endif %}
                     </div>
                     {% if form.DELETE %}
@@ -110,16 +125,14 @@
         const addItemButton = document.getElementById('add-item');
         const formsetContainer = document.getElementById('formset-container');
         const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
-        const emptyForm = document.querySelector('.formset-row').cloneNode(true); // Clone the first form row
+        const emptyForm = document.querySelector('.formset-row').cloneNode(true);
 
-        // Clear values in the cloned empty form
         emptyForm.querySelectorAll('input, select, textarea').forEach(input => {
             input.value = '';
-            input.checked = false; // For checkboxes
+            input.checked = false;
         });
-        emptyForm.style.display = 'none'; // Hide the original empty form if it's rendered
+        emptyForm.style.display = 'none';
 
-        // Function to update element names and IDs for new form rows
         function updateElementIndex(element, prefix, index) {
             const name = element.getAttribute('name');
             const id = element.getAttribute('id');
@@ -134,25 +147,22 @@
 
         addItemButton.addEventListener('click', function() {
             const currentForms = formsetContainer.querySelectorAll('.formset-row').length;
-            const newForm = emptyForm.cloneNode(true); // Clone the empty form
+            const newForm = emptyForm.cloneNode(true);
 
-            // Update names and IDs for new form elements
             newForm.querySelectorAll('input, select, textarea, label').forEach(element => {
                 updateElementIndex(element, 'form', currentForms);
             });
 
-            // Make sure the DELETE checkbox is unchecked for new forms
             const deleteCheckbox = newForm.querySelector('input[type="checkbox"][name$="-DELETE"]');
             if (deleteCheckbox) {
                 deleteCheckbox.checked = false;
             }
 
             formsetContainer.appendChild(newForm);
-            newForm.style.display = 'flex'; // Show the new form
-            totalFormsInput.value = parseInt(totalFormsInput.value) + 1; // Increment TOTAL_FORMS
+            newForm.style.display = 'flex';
+            totalFormsInput.value = parseInt(totalFormsInput.value) + 1;
         });
 
-        // Initial styling for form fields
         document.querySelectorAll('input[type="text"], input[type="number"], select, textarea, input[type="date"]').forEach(input => {
             input.classList.add('w-full', 'px-4', 'py-2', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'transition-colors');
         });

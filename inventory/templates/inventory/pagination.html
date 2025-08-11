@@ -1,0 +1,21 @@
+{# inventory/pagination.html #}
+<div class="flex justify-center items-center space-x-2">
+    {# Previous Page Link #}
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 border rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Previous</a>
+    {% else %}
+        <span class="px-4 py-2 border rounded-lg text-gray-400 bg-gray-50 cursor-not-allowed">Previous</span>
+    {% endif %}
+
+    {# Page Numbers #}
+    <span class="text-gray-700 font-medium">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {# Next Page Link #}
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 border rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Next</a>
+    {% else %}
+        <span class="px-4 py-2 border rounded-lg text-gray-400 bg-gray-50 cursor-not-allowed">Next</span>
+    {% endif %}
+</div>

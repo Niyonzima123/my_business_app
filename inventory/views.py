@@ -10,12 +10,15 @@ from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Count, Q
 from django.db.models.functions import TruncDate
 from datetime import datetime, timedelta, date
 import csv
-
-from django.utils import timezone  # <-- ADDED THIS IMPORT
-
+from django.utils import timezone
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+# NEW: Import for Class-Based Views
+from django.views.generic import ListView
+from django.contrib.auth.mixins import UserPassesTestMixin
+# NEW: Import for creating a custom decorator
+from functools import wraps
 
 from .models import Product, Category, Sale, SaleItem, Supplier, PurchaseOrder, PurchaseOrderItem, StockAdjustment, Customer
 from accounts.models import EmployeeProfile
@@ -24,7 +27,7 @@ from accounts.forms import AddStockForm # Import AddStockForm
 from .forms import SupplierForm, PurchaseOrderForm, PurchaseOrderItemFormSet, StockAdjustmentForm, CustomerForm
 
 
-# --- Helper functions for role checking ---
+# --- Helper functions for role checking (moved to top for clarity) ---
 def is_owner(user):
     return user.is_authenticated and hasattr(user, 'employeeprofile') and user.employeeprofile.role == 'Owner'
 
@@ -39,17 +42,131 @@ def is_cashier(user):
 def is_stock_manager(user):
     return user.is_authenticated and hasattr(user, 'employeeprofile') and (user.employeeprofile.role == 'Stock Manager' or user.employeeprofile.role == 'Owner' or user.is_superuser)
 
+# --- NEW: Custom decorator for cleaner role checking ---
+def role_required(allowed_roles):
+    """
+    Decorator to check if a user has one of the allowed roles.
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            # The UserPassesTestMixin from Django is generally preferred for CBVs.
+            # This is a functional equivalent for FBVs.
+            if not request.user.is_authenticated:
+                return redirect('accounts:login')
+            
+            try:
+                user_role = request.user.employeeprofile.role
+            except EmployeeProfile.DoesNotExist:
+                user_role = None
 
-# --- Product List View (Homepage) ---
-def product_list(request):
-    products = Product.objects.filter(is_active=True).select_related('category').order_by('name')
-    categories = Category.objects.all().order_by('name')
+            if user_role in allowed_roles:
+                return view_func(request, *args, **kwargs)
+            # If the user doesn't have the required role, redirect to login
+            return redirect('accounts:login') # Or to a specific forbidden page
+        return _wrapped_view
+    return decorator
+
+
+# --- Helper function to build a filtered Sales queryset ---
+def get_filtered_sales_query(request):
+    """
+    Helper function to build a filtered Sales queryset based on GET parameters.
+    Returns the queryset and the date/filter parameters for use in context.
+    """
+    # Default date range: last 30 days
+    today = date.today()
+    start_date = today - timedelta(days=29)
+    end_date = today
+
+    # Get filters from GET parameters
+    filter_start_date_str = request.GET.get('start_date')
+    filter_end_date_str = request.GET.get('end_date')
+    filter_period = request.GET.get('period', 'last_30_days')
+    filter_employee_id = request.GET.get('employee_id')
+
+    # Apply period filter first if specified
+    if filter_period == 'today':
+        start_date = today
+        end_date = today
+    elif filter_period == 'last_7_days':
+        start_date = today - timedelta(days=6)
+        end_date = today
+    elif filter_period == 'last_30_days':
+        start_date = today - timedelta(days=29)
+        end_date = today
+    elif filter_period == 'this_month':
+        start_date = today.replace(day=1)
+        end_date = today
+    elif filter_period == 'last_month':
+        first_day_current_month = today.replace(day=1)
+        end_date = first_day_current_month - timedelta(days=1)
+        start_date = end_date.replace(day=1)
+    elif filter_period == 'this_year':
+        start_date = today.replace(month=1, day=1)
+        end_date = today
+    elif filter_period == 'all_time':
+        start_date = datetime.min.date()
+        end_date = today
+
+    # Override with custom date range if provided and valid
+    if filter_start_date_str:
+        try:
+            start_date = datetime.strptime(filter_start_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid start date format. Please use YYYY-MM-DD.")
+    if filter_end_date_str:
+        try:
+            end_date = datetime.strptime(filter_end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid end date format. Please use YYYY-MM-DD.")
+
+    # Ensure end_date includes the entire day for filtering
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
+
+    # Build query for sales
+    sales_query = Sale.objects.filter(sale_date__range=(start_datetime, end_datetime))
+
+    if filter_employee_id:
+        try:
+            employee_user = User.objects.get(id=filter_employee_id)
+            sales_query = sales_query.filter(user=employee_user)
+        except User.DoesNotExist:
+            messages.error(request, "Selected employee not found.")
+            # Reset the filter_employee_id if it's invalid
+            filter_employee_id = None
+
+    return sales_query, start_date, end_date, filter_period, filter_employee_id
+
+
+# --- Product List View (Homepage) - CONVERTED TO CLASS-BASED VIEW ---
+class ProductListView(ListView):
+    model = Product
+    template_name = 'inventory/product_list.html'
+    context_object_name = 'products'
+    paginate_by = 10  # You can adjust this for pagination
+
+    def get_queryset(self):
+        # The original view filtered by is_active. We will maintain this behavior.
+        queryset = Product.objects.filter(is_active=True).select_related('category').order_by('name')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add additional context data from the original function-based view
+        context['categories'] = Category.objects.all().order_by('name')
+        context['page_title'] = 'Our Products'
+        return context
+
+
+# --- Product Detail View ---
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk)
     context = {
-        'products': products,
-        'categories': categories,
-        'page_title': 'Our Products'
+        'product': product
     }
-    return render(request, 'inventory/product_list.html', context)
+    return render(request, 'inventory/product_detail.html', context)
 
 
 # --- Point of Sale (POS) View ---
@@ -221,67 +338,8 @@ def my_sales_view(request):
 @login_required
 @user_passes_test(is_owner, login_url='/accounts/login/')
 def sales_report_view(request):
-    # Default date range: last 30 days
-    today = date.today()
-    start_date = today - timedelta(days=30)
-    end_date = today
-
-    # Get filters from GET parameters
-    filter_start_date_str = request.GET.get('start_date')
-    filter_end_date_str = request.GET.get('end_date')
-    filter_period = request.GET.get('period', 'last_30_days')
-    filter_employee_id = request.GET.get('employee_id')
-
-    # Apply period filter first if specified
-    if filter_period == 'today':
-        start_date = today
-        end_date = today
-    elif filter_period == 'last_7_days':
-        start_date = today - timedelta(days=6)
-        end_date = today
-    elif filter_period == 'last_30_days':
-        start_date = today - timedelta(days=29)
-        end_date = today
-    elif filter_period == 'this_month':
-        start_date = today.replace(day=1)
-        end_date = today
-    elif filter_period == 'last_month':
-        first_day_current_month = today.replace(day=1)
-        end_date = first_day_current_month - timedelta(days=1)
-        start_date = end_date.replace(day=1)
-    elif filter_period == 'this_year':
-        start_date = today.replace(month=1, day=1)
-        end_date = today
-    elif filter_period == 'all_time':
-        start_date = datetime.min.date()
-        end_date = today
-
-    # Override with custom date range if provided and valid
-    if filter_start_date_str:
-        try:
-            start_date = datetime.strptime(filter_start_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            messages.error(request, "Invalid start date format. Please use YYYY-MM-DD.")
-    if filter_end_date_str:
-        try:
-            end_date = datetime.strptime(filter_end_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            messages.error(request, "Invalid end date format. Please use YYYY-MM-DD.")
-
-    # Ensure end_date includes the entire day for filtering
-    start_datetime = datetime.combine(start_date, datetime.min.time())
-    end_datetime = datetime.combine(end_date, datetime.max.time())
-
-    # Build query for sales
-    sales_query = Sale.objects.filter(sale_date__range=(start_datetime, end_datetime))
-
-    if filter_employee_id:
-        try:
-            employee_user = User.objects.get(id=filter_employee_id)
-            sales_query = sales_query.filter(user=employee_user)
-        except User.DoesNotExist:
-            messages.error(request, "Selected employee not found.")
-            filter_employee_id = None
+    # Use the new helper function to get the filtered data
+    sales_query, start_date, end_date, filter_period, filter_employee_id = get_filtered_sales_query(request)
 
     # Fetch individual sales for display
     individual_sales = sales_query.select_related('user', 'customer').order_by('-sale_date')
@@ -333,62 +391,10 @@ def export_sales_csv(request):
 
     writer.writerow(['Sale ID', 'Sale Date', 'Total Amount (RWF)', 'Processed By', 'Customer Name', 'Product Name', 'Quantity', 'Unit Price', 'Subtotal'])
 
-    # Replicate filtering logic from sales_report_view
-    today = date.today()
-    start_date = today - timedelta(days=30)
-    end_date = today
-
-    filter_start_date_str = request.GET.get('start_date')
-    filter_end_date_str = request.GET.get('end_date')
-    filter_period = request.GET.get('period', 'last_30_days')
-    filter_employee_id = request.GET.get('employee_id')
-
-    if filter_period == 'today':
-        start_date = today
-        end_date = today
-    elif filter_period == 'last_7_days':
-        start_date = today - timedelta(days=6)
-        end_date = today
-    elif filter_period == 'last_30_days':
-        start_date = today - timedelta(days=29)
-        end_date = today
-    elif filter_period == 'this_month':
-        start_date = today.replace(day=1)
-        end_date = today
-    elif filter_period == 'last_month':
-        first_day_current_month = today.replace(day=1)
-        end_date = first_day_current_month - timedelta(days=1)
-        start_date = end_date.replace(day=1)
-    elif filter_period == 'this_year':
-        start_date = today.replace(month=1, day=1)
-        end_date = today
-    elif filter_period == 'all_time':
-        start_date = datetime.min.date()
-        end_date = today
-
-    if filter_start_date_str:
-        try:
-            start_date = datetime.strptime(filter_start_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            pass
-    if filter_end_date_str:
-        try:
-            end_date = datetime.strptime(filter_end_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            pass
-
-    start_datetime = datetime.combine(start_date, datetime.min.time())
-    end_datetime = datetime.combine(end_date, datetime.max.time())
-
-    sales_data_query = Sale.objects.filter(sale_date__range=(start_datetime, end_datetime))
-
-    if filter_employee_id:
-        try:
-            employee_user = User.objects.get(id=filter_employee_id)
-            sales_data_query = sales_data_query.filter(user=employee_user)
-        except User.DoesNotExist:
-            pass
-
+    # Use the new helper function to get the filtered sales data
+    sales_data_query, _, _, _, _ = get_filtered_sales_query(request)
+    
+    # Fetch all sales items related to the filtered sales
     sales_data = sales_data_query.select_related('user', 'customer').prefetch_related('saleitem_set__product').order_by('sale_date')
 
     for sale in sales_data:
@@ -418,6 +424,7 @@ def export_sales_csv(request):
                 'No Items', 0, 0.00, 0.00
             ])
     return response
+
 
 # --- Low Stock Alerts View (UPDATED to send email) ---
 @login_required
@@ -453,13 +460,11 @@ def low_stock_alerts_view(request):
                     html_message=html_message,
                     fail_silently=False,
                 )
-                messages.info(request, 'Low stock alert email sent to relevant personnel.')
             except Exception as e:
                 messages.error(request, f'Failed to send low stock alert email: {e}')
                 print(f"Email sending error: {e}")
         else:
             messages.warning(request, 'No active owners or stock managers with email addresses found to send low stock alerts.')
-
 
     context = {
         'page_title': 'Low Stock Alerts',
@@ -486,7 +491,7 @@ def supplier_list_view(request):
 def create_purchase_order_view(request):
     if request.method == 'POST':
         po_form = PurchaseOrderForm(request.POST)
-        formset = PurchaseOrderItemFormSet(request.POST, instance=PurchaseOrder())
+        formset = PurchaseOrderItemFormSet(request.POST) # <-- THIS LINE WAS MODIFIED
         
         if po_form.is_valid() and formset.is_valid():
             with transaction.atomic():
@@ -500,9 +505,12 @@ def create_purchase_order_view(request):
                 purchase_order.calculate_total_amount()
 
                 messages.success(request, f'Purchase Order #{purchase_order.id} created successfully!')
-                return redirect('inventory:supplier_list')
+            return redirect('inventory:supplier_list')
 
         else:
+            # These print statements will show you the exact validation errors
+            print("Purchase Order Form Errors:", po_form.errors)
+            print("Purchase Order Item Formset Errors:", formset.errors)
             messages.error(request, 'Please correct the errors below.')
     else:
         po_form = PurchaseOrderForm()
@@ -585,9 +593,9 @@ def create_stock_adjustment_view(request):
                 adjustment.adjusted_by = request.user
                 adjustment.save()
 
-                product = adjustment.product
-                product.stock_quantity += adjustment.quantity_change
-                product.save()
+            product = adjustment.product
+            product.stock_quantity += adjustment.quantity_change
+            product.save()
 
             messages.success(request, f'Stock adjustment for {adjustment.product.name} recorded successfully!')
             return redirect('inventory:create_stock_adjustment')
@@ -637,16 +645,33 @@ def customer_list_view(request):
     return render(request, 'inventory/customer_list.html', context)
 
 
-# --- Create Customer View ---
+# --- NEW: Customer Detail View ---
+@login_required
+@user_passes_test(lambda u: is_owner(u) or is_cashier(u), login_url='/accounts/login/')
+def customer_detail_view(request, pk):
+    """
+    Displays details for a single customer.
+    """
+    customer = get_object_or_404(Customer, pk=pk)
+    context = {
+        'page_title': f'Customer: {customer.get_full_name()}',
+        'customer': customer,
+    }
+    return render(request, 'inventory/customer_detail.html', context)
+
+
+# --- Create Customer View (MODIFIED) ---
 @login_required
 @user_passes_test(lambda u: is_owner(u) or is_cashier(u), login_url='/accounts/login/')
 def create_customer_view(request):
     if request.method == 'POST':
         form = CustomerForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Save the form and get the new customer instance
+            new_customer = form.save()
             messages.success(request, 'Customer added successfully!')
-            return redirect('inventory:customer_list')
+            # Redirect to the customer_detail view using the new customer's ID
+            return redirect('inventory:customer_detail', pk=new_customer.pk)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -694,3 +719,38 @@ def customer_purchase_history_view(request, pk):
         'sales_history': sales_history,
     }
     return render(request, 'inventory/customer_purchase_history.html', context)
+
+# --- NEW: Disable Product View (Soft Delete) ---
+@login_required
+@user_passes_test(lambda u: is_owner(u) or is_stock_manager(u), login_url='/accounts/login/')
+def disable_product_view(request, pk):
+    """
+    Sets a product's is_active status to False.
+    This performs a 'soft delete' to hide it from the POS and other front-end views.
+    """
+    if request.method == 'POST':
+        product = get_object_or_404(Product, pk=pk)
+        product.is_active = False
+        product.save()
+        messages.success(request, f'Successfully disabled product "{product.name}". It is no longer available for sale.')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('inventory:product_list')
+
+
+# --- NEW: Enable Product View (Restore) ---
+@login_required
+@user_passes_test(lambda u: is_owner(u) or is_stock_manager(u), login_url='/accounts/login/')
+def enable_product_view(request, pk):
+    """
+    Sets a product's is_active status back to True.
+    This 'restores' a previously disabled product.
+    """
+    if request.method == 'POST':
+        product = get_object_or_404(Product, pk=pk)
+        product.is_active = True
+        product.save()
+        messages.success(request, f'Successfully enabled product "{product.name}". It is now available for sale.')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('inventory:product_list')

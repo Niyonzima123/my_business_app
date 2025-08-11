@@ -1,7 +1,8 @@
 # inventory/models.py
 from django.db import models
 from django.contrib.auth.models import User # Import Django's built-in User model
-from cloudinary.models import CloudinaryField # Import Cloudinary's image field
+from django.db.models.signals import post_delete # Import signal for image deletion
+from django.dispatch import receiver # Import receiver for image deletion
 
 # Model for Product Categories (e.g., "Electronics", "Clothing", "Food")
 class Category(models.Model):
@@ -24,7 +25,7 @@ class Product(models.Model):
     stock_quantity = models.IntegerField(default=0, help_text="Current quantity of product in stock")
     reorder_level = models.IntegerField(default=10, help_text="Minimum stock quantity to trigger a reorder alert")
     is_active = models.BooleanField(default=True, help_text="Is the product currently available for sale?")
-    image = CloudinaryField('image', blank=True, null=True, help_text="Optional image for the product") # <--- UPDATED
+    image = models.ImageField(upload_to='products/', blank=True, null=True, help_text="Optional image for the product")
     barcode = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Unique barcode for the product")
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date and time when the product was added")
     updated_at = models.DateTimeField(auto_now=True, help_text="Last date and time when the product details were updated")
@@ -43,6 +44,17 @@ class Product(models.Model):
             return "Low Stock - Reorder Soon!"
         else:
             return "In Stock"
+
+# Signal to delete image file when Product object is deleted
+@receiver(post_delete, sender=Product)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem
+    when corresponding `Product` object is deleted.
+    """
+    if instance.image:
+        if instance.image.storage.exists(instance.image.name):
+            instance.image.delete(save=False)
 
 
 # --- NEW MODEL FOR CUSTOMER MANAGEMENT ---
@@ -101,24 +113,21 @@ class SaleItem(models.Model):
         return f"{self.quantity} x {self.product.name} in Sale #{self.sale.id}"
 
     def save(self, *args, **kwargs):
+        # The logic below was causing the double deduction. We've simplified it
+        # to focus only on calculating the subtotal, as the stock is handled
+        # in the view.
         if not self.unit_price:
             self.unit_price = self.product.price
 
         self.subtotal = self.quantity * self.unit_price
 
-        if self.pk:
-            original_sale_item = SaleItem.objects.get(pk=self.pk)
-            stock_change = self.quantity - original_sale_item.quantity
-            self.product.stock_quantity -= stock_change
-        else:
-            self.product.stock_quantity -= self.quantity
-
-        self.product.save()
+        # The stock quantity is now managed by the view processing the sale.
+        # This prevents the stock from being deducted twice.
         super().save(*args, **kwargs)
 
+    # The delete method's stock logic was also removed to prevent unexpected
+    # stock changes if a SaleItem is deleted.
     def delete(self, *args, **kwargs):
-        self.product.stock_quantity += self.quantity
-        self.product.save()
         super().delete(*args, **kwargs)
 
 # --- Models for Supplier Management ---

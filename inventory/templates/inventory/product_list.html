@@ -1,13 +1,45 @@
-<!-- my_business_app/inventory/templates/inventory/product_list.html -->
 {% extends 'base.html' %} {# This tells Django to use base.html as the layout #}
 {% load static %} {# Load static files for image URLs #}
 
 {% block content %}
 <h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Our Products</h1>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+{# Search and Filter/Sort Section #}
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        {# Search Bar #}
+        <div class="w-full sm:w-1/2">
+            <label for="productSearch" class="sr-only">Search Products</label>
+            <input type="text" id="productSearch" placeholder="Search products..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+        </div>
+
+        {# Filter by Category #}
+        <div class="w-full sm:w-1/4">
+            <label for="categoryFilter" class="sr-only">Filter by Category</label>
+            <select id="categoryFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <option value="all">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.name }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {# Sort By #}
+        <div class="w-full sm:w-1/4">
+            <label for="sortOrder" class="sr-only">Sort by</label>
+            <select id="sortOrder" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <option value="name_asc">Name (A-Z)</option>
+                <option value="name_desc">Name (Z-A)</option>
+                <option value="price_asc">Price (Low to High)</option>
+                <option value="price_desc">Price (High to Low)</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div id="product-list-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for product in products %}
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300 product-card" data-category="{{ product.category.name|default:'N/A' }}" data-name="{{ product.name|lower }}" data-price="{{ product.price }}">
         {# Product Image Display #}
         <div class="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
             {% if product.image %}
@@ -35,6 +67,12 @@
             </div>
         </div>
         
+        {# View Details Button #}
+        <div class="p-4 pt-0">
+            <a href="{% url 'inventory:product_detail' product.id %}" class="block w-full bg-indigo-600 text-white py-2 px-4 text-center rounded-lg font-semibold hover:bg-indigo-700 transition-colors duration-300">
+                View Details
+            </a>
+        </div>
     </div>
     {% empty %}
     <div class="col-span-full text-center p-8 bg-white rounded-xl shadow-md text-gray-600">
@@ -42,4 +80,65 @@
     </div>
     {% endfor %}
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const productSearch = document.getElementById('productSearch');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const sortOrder = document.getElementById('sortOrder');
+        const productListContainer = document.getElementById('product-list-container');
+        const productCards = Array.from(productListContainer.getElementsByClassName('product-card'));
+
+        function updateProductDisplay() {
+            const searchQuery = productSearch.value.toLowerCase();
+            const selectedCategory = categoryFilter.value;
+            const selectedSortOrder = sortOrder.value;
+
+            // Filter products
+            let filteredProducts = productCards.filter(card => {
+                const productName = card.getAttribute('data-name');
+                const productCategory = card.getAttribute('data-category');
+                
+                const matchesSearch = productName.includes(searchQuery);
+                const matchesCategory = selectedCategory === 'all' || productCategory === selectedCategory;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            // Sort products
+            filteredProducts.sort((a, b) => {
+                const aName = a.getAttribute('data-name');
+                const bName = b.getAttribute('data-name');
+                const aPrice = parseFloat(a.getAttribute('data-price'));
+                const bPrice = parseFloat(b.getAttribute('data-price'));
+
+                if (selectedSortOrder === 'name_asc') {
+                    return aName.localeCompare(bName);
+                } else if (selectedSortOrder === 'name_desc') {
+                    return bName.localeCompare(aName);
+                } else if (selectedSortOrder === 'price_asc') {
+                    return aPrice - bPrice;
+                } else if (selectedSortOrder === 'price_desc') {
+                    return bPrice - aPrice;
+                }
+                return 0;
+            });
+
+            // Clear and re-render the list
+            productListContainer.innerHTML = '';
+            if (filteredProducts.length > 0) {
+                filteredProducts.forEach(card => productListContainer.appendChild(card));
+            } else {
+                const noProductsMessage = document.createElement('div');
+                noProductsMessage.className = 'col-span-full text-center p-8 bg-white rounded-xl shadow-md text-gray-600';
+                noProductsMessage.innerHTML = '<p class="text-lg">No products match your search or filter criteria.</p>';
+                productListContainer.appendChild(noProductsMessage);
+            }
+        }
+
+        productSearch.addEventListener('input', updateProductDisplay);
+        categoryFilter.addEventListener('change', updateProductDisplay);
+        sortOrder.addEventListener('change', updateProductDisplay);
+    });
+</script>
 {% endblock content %}

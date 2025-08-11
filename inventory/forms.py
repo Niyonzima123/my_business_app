@@ -1,8 +1,26 @@
-# inventory/forms.py (append this to the existing content)
+# inventory/forms.py
 
 from django import forms
-from .models import PurchaseOrderItem, Supplier, PurchaseOrder, Product, StockAdjustment, Customer # <--- ADD Customer
+from .models import (
+    PurchaseOrderItem,
+    Supplier,
+    PurchaseOrder,
+    Product,
+    StockAdjustment,
+    Customer
+)
 
+# --- FORM FOR PRODUCT ---
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ['name', 'category', 'price', 'stock_quantity', 'image', 'description']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+# --- FORM FOR SUPPLIER ---
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
@@ -11,6 +29,8 @@ class SupplierForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
+
+# --- FORM FOR PURCHASE ORDER ---
 class PurchaseOrderForm(forms.ModelForm):
     expected_delivery_date = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date'}),
@@ -24,6 +44,8 @@ class PurchaseOrderForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
+
+# --- FORMSET FOR PURCHASE ORDER ITEMS ---
 PurchaseOrderItemFormSet = forms.inlineformset_factory(
     PurchaseOrder,
     PurchaseOrderItem,
@@ -37,6 +59,8 @@ PurchaseOrderItemFormSet = forms.inlineformset_factory(
     }
 )
 
+
+# --- FORM FOR STOCK ADJUSTMENT ---
 class StockAdjustmentForm(forms.ModelForm):
     quantity_change = forms.IntegerField(
         label="Quantity Change",
@@ -50,7 +74,8 @@ class StockAdjustmentForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
-# --- NEW FORM FOR CUSTOMER ---
+
+# --- FORM FOR CUSTOMER ---
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
