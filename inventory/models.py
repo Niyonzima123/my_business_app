@@ -1,8 +1,7 @@
 # inventory/models.py
 from django.db import models
 from django.contrib.auth.models import User # Import Django's built-in User model
-from django.db.models.signals import post_delete # Import signal for image deletion
-from django.dispatch import receiver # Import receiver for image deletion
+from cloudinary.models import CloudinaryField # Import Cloudinary's image field
 
 # Model for Product Categories (e.g., "Electronics", "Clothing", "Food")
 class Category(models.Model):
@@ -25,8 +24,8 @@ class Product(models.Model):
     stock_quantity = models.IntegerField(default=0, help_text="Current quantity of product in stock")
     reorder_level = models.IntegerField(default=10, help_text="Minimum stock quantity to trigger a reorder alert")
     is_active = models.BooleanField(default=True, help_text="Is the product currently available for sale?")
-    image = models.ImageField(upload_to='products/', blank=True, null=True, help_text="Optional image for the product")
-    barcode = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Unique barcode for the product") # <--- NEW FIELD
+    image = CloudinaryField('image', blank=True, null=True, help_text="Optional image for the product") # <--- UPDATED
+    barcode = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Unique barcode for the product")
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date and time when the product was added")
     updated_at = models.DateTimeField(auto_now=True, help_text="Last date and time when the product details were updated")
 
@@ -44,17 +43,6 @@ class Product(models.Model):
             return "Low Stock - Reorder Soon!"
         else:
             return "In Stock"
-
-# Signal to delete image file when Product object is deleted
-@receiver(post_delete, sender=Product)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    """
-    Deletes file from filesystem
-    when corresponding `Product` object is deleted.
-    """
-    if instance.image:
-        if instance.image.storage.exists(instance.image.name):
-            instance.image.delete(save=False)
 
 
 # --- NEW MODEL FOR CUSTOMER MANAGEMENT ---
@@ -82,7 +70,7 @@ class Customer(models.Model):
 # Model for a Sale Transaction (UPDATED to link to Customer)
 class Sale(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, help_text="User who processed the sale")
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, help_text="The customer for this sale (optional)") # <--- NEW FIELD
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, help_text="The customer for this sale (optional)")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Total amount of the sale")
     sale_date = models.DateTimeField(auto_now_add=True, help_text="Date and time when the sale occurred")
 
@@ -114,7 +102,7 @@ class SaleItem(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.unit_price:
-             self.unit_price = self.product.price
+            self.unit_price = self.product.price
 
         self.subtotal = self.quantity * self.unit_price
 

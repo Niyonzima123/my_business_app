@@ -5,6 +5,10 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 
+# Import the cloudinary and cloudinary_storage packages
+import cloudinary
+import cloudinary_storage
+
 # Load environment variables from a .env file (for local development)
 load_dotenv()
 
@@ -34,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic',  # Added for Whitenoise to handle static files in dev
+
+    # Add Cloudinary apps
+    'cloudinary_storage',
+    'cloudinary',
 
     # My custom apps
     'inventory',
@@ -72,6 +80,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'business_manager.wsgi.application'
 
 # Database
+# Use PostgreSQL with a DATABASE_URL environment variable if available
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES = {
@@ -81,13 +90,18 @@ if DATABASE_URL:
         )
     }
 else:
-    # Fallback to SQLite for local development
+    # Fallback to local PostgreSQL for development
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'business_db',
+            'USER': 'business_user',
+            'PASSWORD': 'ABC123',
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -121,7 +135,15 @@ if not DEBUG:
 
 # Media files (user-uploaded content like product images)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Configure Cloudinary using the CLOUDINARY_URL environment variable
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+if CLOUDINARY_URL:
+    cloudinary.config(
+        secure=True,
+        cloudinary_url=CLOUDINARY_URL
+    )
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
