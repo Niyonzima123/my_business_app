@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block content %}
 <h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Point of Sale</h1>
@@ -9,22 +10,24 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-4xl mx-auto border border-blue-200">
-    <form id="posForm" method="post" action="{% url 'inventory:pos_view' %}" class="space-y-6">
-        {% csrf_token %} {# Django's security token for forms #}
+    <div id="messageArea" class="mt-4 p-3 rounded-lg text-center text-sm font-medium hidden"></div>
 
+    <div class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Product Selection -->
             <div>
                 <label for="productSelect" class="block text-lg font-medium text-gray-700 mb-2">Select Product:</label>
                 <select id="productSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                     <option value="">-- Select a Product --</option>
                     {% for product in products %}
-                        <option value="{{ product.id }}" data-price="{{ product.price }}" data-stock="{{ product.stock_quantity }}">
-                            {{ product.name }} (RWF {{ product.price|floatformat:2 }}) - Stock: {{ product.stock_quantity }}
-                        </option>
+                    <option value="{{ product.id }}" data-price="{{ product.price }}" data-stock="{{ product.stock_quantity }}" data-name="{{ product.name }}">
+                        {{ product.name }} (RWF {{ product.price|floatformat:2 }}) - Stock: {{ product.stock_quantity }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
 
+            <!-- Quantity Input -->
             <div>
                 <label for="quantityInput" class="block text-lg font-medium text-gray-700 mb-2">Quantity:</label>
                 <input type="number" id="quantityInput" value="1" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
@@ -36,6 +39,17 @@
         </button>
 
         <hr class="my-6 border-gray-200">
+
+        <!-- Customer Selection -->
+        <div>
+            <label for="customerSelect" class="block text-lg font-medium text-gray-700 mb-2">Select Customer:</label>
+            <select id="customerSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <option value="">Walk-in Customer</option>
+                {% for customer in customers %}
+                <option value="{{ customer.id }}">{{ customer.first_name }} {{ customer.last_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
         <div>
             <h3 class="text-2xl font-semibold text-indigo-700 mb-4">Items in Cart:</h3>
@@ -49,12 +63,18 @@
             <span id="totalAmount" class="text-3xl font-extrabold text-indigo-900">RWF 0.00</span>
         </div>
 
-        <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300">
-            Process Sale
-        </button>
-
-        <div id="messageArea" class="mt-4 p-3 rounded-lg text-center text-sm font-medium hidden"></div>
-    </form>
+        <!-- Checkout Button -->
+        <form id="posForm" method="post" action="{% url 'inventory:pos_view' %}">
+            {% csrf_token %}
+            <!-- The cart data will be dynamically added here by JavaScript -->
+            <div id="cartInputs"></div>
+            
+            <input type="hidden" name="customer_id" id="customerInput">
+            <button type="submit" id="processSaleBtn" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300">
+                Process Sale
+            </button>
+        </form>
+    </div>
 </div>
 
 <script>
@@ -67,94 +87,14 @@
     const noItemsMessage = document.getElementById('noItemsMessage');
     const posForm = document.getElementById('posForm');
     const messageArea = document.getElementById('messageArea');
+    const customerSelect = document.getElementById('customerSelect');
+    const customerInput = document.getElementById('customerInput');
+    const cartInputsDiv = document.getElementById('cartInputs');
 
-    let cart = []; // Array to hold items in the current sale
+    let cart = {}; // Use an object for easier lookup and updates
     let currentTotal = 0;
 
-    // Function to update the displayed cart and total
-    function updateCartDisplay() {
-        cartItemsDiv.innerHTML = ''; // Clear existing items
-        currentTotal = 0;
-
-        if (cart.length === 0) {
-            noItemsMessage.classList.remove('hidden');
-        } else {
-            noItemsMessage.classList.add('hidden');
-            cart.forEach((item, index) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200';
-                itemDiv.innerHTML = `
-                    <span class="text-gray-800 font-medium">${item.quantity} x ${item.productName}</span>
-                    <span class="text-indigo-600 font-semibold">RWF ${(item.quantity * item.productPrice).toFixed(2)}</span>
-                    <button type="button" data-index="${index}" class="remove-item-btn text-red-500 hover:text-red-700 transition-colors">
-                        &times;
-                    </button>
-                `;
-                cartItemsDiv.appendChild(itemDiv);
-                currentTotal += (item.quantity * item.productPrice);
-            });
-        }
-        totalAmountSpan.textContent = `RWF ${currentTotal.toFixed(2)}`;
-    }
-
-    // Event listener for adding items to cart
-    addItemBtn.addEventListener('click', () => {
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        const productId = selectedOption.value;
-        const productName = selectedOption.textContent.split('(')[0].trim(); // Get name before price
-        const productPrice = parseFloat(selectedOption.dataset.price);
-        const productStock = parseInt(selectedOption.dataset.stock);
-        const quantity = parseInt(quantityInput.value);
-
-        if (!productId) {
-            showMessage('Please select a product.', 'error');
-            return;
-        }
-        if (isNaN(quantity) || quantity <= 0) {
-            showMessage('Please enter a valid quantity.', 'error');
-            return;
-        }
-        if (quantity > productStock) {
-            showMessage(`Not enough stock for ${productName}. Available: ${productStock}`, 'error');
-            return;
-        }
-
-        // Check if product already in cart, update quantity
-        const existingItemIndex = cart.findIndex(item => item.productId === productId);
-        if (existingItemIndex > -1) {
-            cart[existingItemIndex].quantity += quantity;
-        } else {
-            cart.push({ productId, productName, productPrice, quantity });
-        }
-        
-        // This is the key change. We are no longer visually deducting stock on the client-side.
-        // The page reload will handle getting the correct stock from the server.
-
-        updateCartDisplay();
-        showMessage('Item added to cart!', 'success');
-        quantityInput.value = 1; // Reset quantity
-        productSelect.value = ''; // Reset product selection
-    });
-
-    // Event listener for removing items from cart
-    cartItemsDiv.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-item-btn')) {
-            const indexToRemove = parseInt(e.target.dataset.index);
-            const removedItem = cart.splice(indexToRemove, 1)[0];
-
-            // Return stock visually to the select option
-            const productOption = productSelect.querySelector(`option[value="${removedItem.productId}"]`);
-            if (productOption) {
-                productOption.dataset.stock = parseInt(productOption.dataset.stock) + removedItem.quantity;
-                productOption.textContent = `${removedItem.productName} (RWF ${removedItem.productPrice.toFixed(2)}) - Stock: ${productOption.dataset.stock}`;
-            }
-
-            updateCartDisplay();
-            showMessage('Item removed from cart.', 'info');
-        }
-    });
-
-    // Function to display messages
+    // Utility function to display messages
     function showMessage(msg, type) {
         messageArea.textContent = msg;
         messageArea.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
@@ -165,49 +105,138 @@
         } else { // info
             messageArea.classList.add('bg-blue-100', 'text-blue-700');
         }
+        messageArea.classList.remove('hidden');
         setTimeout(() => {
             messageArea.classList.add('hidden');
         }, 3000); // Hide after 3 seconds
     }
 
+    // Function to update the displayed cart and total
+    function updateCartDisplay() {
+        cartItemsDiv.innerHTML = '';
+        currentTotal = 0;
+
+        if (Object.keys(cart).length === 0) {
+            noItemsMessage.classList.remove('hidden');
+        } else {
+            noItemsMessage.classList.add('hidden');
+            for (const productId in cart) {
+                const item = cart[productId];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200';
+                itemDiv.innerHTML = `
+                    <span class="text-gray-800 font-medium">${item.quantity} x ${item.productName}</span>
+                    <span class="text-indigo-600 font-semibold">RWF ${(item.quantity * item.productPrice).toFixed(2)}</span>
+                    <button type="button" data-id="${item.productId}" class="remove-item-btn text-red-500 hover:text-red-700 transition-colors">
+                        &times;
+                    </button>
+                `;
+                cartItemsDiv.appendChild(itemDiv);
+                currentTotal += (item.quantity * item.productPrice);
+            }
+        }
+        totalAmountSpan.textContent = `RWF ${currentTotal.toFixed(2)}`;
+    }
+
+    // Event listener for adding items to cart
+    addItemBtn.addEventListener('click', () => {
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        if (!selectedOption.value) {
+            showMessage('Please select a product.', 'error');
+            return;
+        }
+
+        const productId = selectedOption.value;
+        const productName = selectedOption.dataset.name;
+        const productPrice = parseFloat(selectedOption.dataset.price);
+        const productStock = parseInt(selectedOption.dataset.stock);
+        const quantity = parseInt(quantityInput.value);
+        
+        if (isNaN(quantity) || quantity <= 0) {
+            showMessage('Please enter a valid quantity.', 'error');
+            return;
+        }
+        
+        let newQuantity = quantity;
+        if (cart[productId]) {
+            newQuantity += cart[productId].quantity;
+        }
+
+        if (newQuantity > productStock) {
+            showMessage(`Not enough stock for ${productName}. Available: ${productStock}`, 'error');
+            return;
+        }
+
+        if (cart[productId]) {
+            cart[productId].quantity += quantity;
+        } else {
+            cart[productId] = { productId, productName, productPrice, quantity };
+        }
+        
+        updateCartDisplay();
+        showMessage('Item added to cart!', 'success');
+        quantityInput.value = 1; // Reset quantity
+        productSelect.value = ''; // Reset product selection
+    });
+
+    // Event listener for removing items from cart
+    cartItemsDiv.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-item-btn')) {
+            const button = e.target;
+            const productId = button.dataset.id;
+            delete cart[productId];
+            updateCartDisplay();
+            showMessage('Item removed from cart.', 'info');
+        }
+    });
+
     // Event listener for form submission
     posForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault();
 
-        if (cart.length === 0) {
+        if (Object.keys(cart).length === 0) {
             showMessage('Please add items to the cart before processing the sale.', 'error');
             return;
         }
 
-        const formData = new FormData();
-        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        // Clear existing hidden inputs before creating new ones
+        cartInputsDiv.innerHTML = '';
+        
+        // Dynamically create a hidden input for each item to match Django's request.POST.getlist('items[]')
+        for (const productId in cart) {
+            const item = cart[productId];
+            const itemInput = document.createElement('input');
+            itemInput.type = 'hidden';
+            itemInput.name = 'items[]';
+            itemInput.value = `product_id=${item.productId}&quantity=${item.quantity}`;
+            cartInputsDiv.appendChild(itemInput);
+        }
 
-        cart.forEach(item => {
-            formData.append('items[]', `product_id=${item.productId}&quantity=${item.quantity}`);
-        });
-
+        customerInput.value = customerSelect.value;
+        
         try {
             const response = await fetch(posForm.action, {
                 method: 'POST',
-                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: new FormData(posForm)
             });
 
             const result = await response.json();
 
             if (result.status === 'success') {
                 showMessage(result.message, 'success');
-                cart = []; // Clear cart after successful sale
-                updateCartDisplay();
                 
-                // NEW: Reload the page to get the updated stock levels from the server
-                window.location.reload();
-
-                // NEW: Open receipt in a new window
                 if (result.sale_id) {
                     const receiptUrl = `{% url 'inventory:receipt_view' 0 %}`.replace('0', result.sale_id);
                     window.open(receiptUrl, '_blank');
                 }
-
+                
+                // --- THESE ARE THE KEY CHANGES TO PREVENT DUPLICATE SUBMISSIONS ---
+                cart = {}; // Clear the cart object
+                updateCartDisplay(); // Update the display to show an empty cart
+                window.location.reload(); // Reload the page to get the updated stock from the server
             } else {
                 showMessage(result.message, 'error');
             }

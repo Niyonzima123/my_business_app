@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'whitenoise.runserver_nostatic',  # Added for Whitenoise to handle static files in dev
+    'whitenoise.runserver_nostatic', 
+    'django.contrib.humanize', # Added for Whitenoise to handle static files in dev
 
     # Add Cloudinary apps
     'cloudinary_storage',
