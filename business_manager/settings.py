@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic', 
-    'django.contrib.humanize', # Added for Whitenoise to handle static files in dev
+    'django.contrib.humanize',
 
     # Add Cloudinary apps
     'cloudinary_storage',
@@ -134,17 +134,18 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# --- CORRECTED MEDIA CONFIGURATION ---
 # Media files (user-uploaded content like product images)
+# Point MEDIA_URL to Cloudinary's storage for production
+# This is the most crucial change to make it work.
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
 MEDIA_URL = '/media/'
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# Configure Cloudinary using the CLOUDINARY_URL environment variable
-CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
-if CLOUDINARY_URL:
-    cloudinary.config(
-        secure=True,
-        cloudinary_url=CLOUDINARY_URL
-    )
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
