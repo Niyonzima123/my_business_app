@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'whitenoise.runserver_nostatic', 
+    'whitenoise.runserver_nostatic',
     'django.contrib.humanize',
 
     # Add Cloudinary apps
@@ -81,7 +81,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'business_manager.wsgi.application'
 
 # Database
-# Use PostgreSQL with a DATABASE_URL environment variable if available
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES = {
@@ -136,16 +135,24 @@ if not DEBUG:
 
 # --- CORRECTED MEDIA CONFIGURATION ---
 # Media files (user-uploaded content like product images)
-# Point MEDIA_URL to Cloudinary's storage for production
-# This is the most crucial change to make it work.
+MEDIA_URL = '/media/'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Configure Cloudinary
+# Use a dictionary to set all Cloudinary configuration details.
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
-MEDIA_URL = '/media/'
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+# The cloudinary.config method is also correct but often redundant if CLOUDINARY_STORAGE is used
+# CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+# if CLOUDINARY_URL:
+#     cloudinary.config(
+#         secure=True,
+#         cloudinary_url=CLOUDINARY_URL
+#     )
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
