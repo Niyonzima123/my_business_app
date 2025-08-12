@@ -1,6 +1,21 @@
 {% extends 'base.html' %} {# This tells Django to use base.html as the layout #}
 {% load static %} {# Load static files for image URLs #}
 
+{# --- Page-Specific SEO Blocks --- #}
+{# The title for this specific page, overriding the default in base.html #}
+{% block title %}Our Business Products | Shop in Rwanda{% endblock %}
+
+{# A compelling description for this page to appear in search results #}
+{% block description %}
+Explore our comprehensive range of business products for stock, sales, and employee management. Find the best tools to grow your business in Rwanda.
+{% endblock %}
+
+{# Keywords relevant to the content on this product listing page #}
+{% block keywords %}
+Rwanda business products, shop online in Rwanda, inventory management system in Rwanda, sales tools, employee tracking, office supplies, business equipment
+{% endblock %}
+
+{# --- Main Page Content --- #}
 {% block content %}
 <h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Our Products</h1>
 
