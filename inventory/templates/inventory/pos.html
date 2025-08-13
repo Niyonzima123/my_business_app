@@ -9,32 +9,33 @@
     Logged in as: <span class="font-semibold text-indigo-600">{{ user.username }} ({{ user_role }})</span>
 </div>
 
-<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-4xl mx-auto border border-blue-200">
+<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-5xl mx-auto border border-blue-200">
+    <!-- Live notifications -->
     <div id="messageArea" class="mt-4 p-3 rounded-lg text-center text-sm font-medium hidden"></div>
 
     <div class="space-y-6">
+        <!-- Product Selection -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Product Selection -->
             <div>
                 <label for="productSelect" class="block text-lg font-medium text-gray-700 mb-2">Select Product:</label>
                 <select id="productSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                     <option value="">-- Select a Product --</option>
                     {% for product in products %}
-                    <option value="{{ product.id }}" data-price="{{ product.price }}" data-stock="{{ product.stock_quantity }}" data-name="{{ product.name }}">
+                    <option value="{{ product.id }}" data-price="{{ product.price }}" data-stock="{{ product.stock_quantity }}" data-name="{{ product.name }}"
+                        {% if product.stock_quantity <= 0 %}disabled class="text-gray-400"{% endif %}>
                         {{ product.name }} (RWF {{ product.price|floatformat:2 }}) - Stock: {{ product.stock_quantity }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Quantity Input -->
             <div>
                 <label for="quantityInput" class="block text-lg font-medium text-gray-700 mb-2">Quantity:</label>
                 <input type="number" id="quantityInput" value="1" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
             </div>
         </div>
 
-        <button type="button" id="addItemBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-300">
+        <button type="button" id="addItemBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 disabled:opacity-50 transition-colors duration-300">
             Add Item
         </button>
 
@@ -51,34 +52,98 @@
             </select>
         </div>
 
+        <!-- Cart Table -->
         <div>
             <h3 class="text-2xl font-semibold text-indigo-700 mb-4">Items in Cart:</h3>
-            <div id="cartItems" class="space-y-3">
-                <p id="noItemsMessage" class="text-gray-500 text-center">No items added yet.</p>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <tr>
+                            <th class="py-3 px-6 text-left">Product</th>
+                            <th class="py-3 px-6 text-center">Quantity</th>
+                            <th class="py-3 px-6 text-right">Price (RWF)</th>
+                            <th class="py-3 px-6 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartItems" class="text-gray-700 text-sm font-light">
+                        <tr id="noItemsMessage">
+                            <td colspan="4" class="py-4 text-center text-gray-500">No items added yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="flex justify-between items-center bg-indigo-50 p-4 rounded-lg shadow-inner">
+        <!-- Total Amount -->
+        <div class="flex justify-between items-center bg-indigo-50 p-4 rounded-lg shadow-inner mt-4">
             <span class="text-xl font-bold text-indigo-800">Total:</span>
             <span id="totalAmount" class="text-3xl font-extrabold text-indigo-900">RWF 0.00</span>
         </div>
 
-        <!-- Checkout Button -->
+        <!-- Checkout Form -->
         <form id="posForm" method="post" action="{% url 'inventory:pos_view' %}">
             {% csrf_token %}
-            <!-- The cart data will be dynamically added here by JavaScript -->
             <div id="cartInputs"></div>
-            
             <input type="hidden" name="customer_id" id="customerInput">
-            <button type="submit" id="processSaleBtn" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300">
+            <button type="submit" id="processSaleBtn" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-xl hover:bg-green-700 disabled:opacity-50 transition-colors duration-300 mt-4">
                 Process Sale
             </button>
         </form>
     </div>
 </div>
 
+<!-- Footer with Low-stock alerts, quick links, and clock -->
+<footer class="mt-10 bg-indigo-50 border-t border-indigo-200 rounded-t-lg p-6 sm:p-8 shadow-inner">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <!-- Company Info -->
+        <div class="text-center md:text-left">
+            <h4 class="text-lg font-bold text-indigo-800">Smart Trading POS</h4>
+            <p class="text-sm text-gray-600">© {{ "now"|date:"Y" }} Smart Trading. All rights reserved.</p>
+            <p class="text-sm text-gray-600">Empowering your business management.</p>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
+            <a href="{% url 'accounts:owner_dashboard' %}" class="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">Dashboard</a>
+            <a href="{% url 'inventory:product_list' %}" class="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">Products</a>
+            <a href="{% url 'inventory:sales_list' %}" class="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">Sales</a>
+            <a href="{% url 'inventory:product_performance_report' %}" class="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">Reports</a>
+        </div>
+
+        <!-- User Info & Clock -->
+        <div class="text-center md:text-right">
+            <p class="text-sm text-gray-700">Logged in as: <span class="font-semibold text-indigo-600">{{ user.username }}</span></p>
+            <p class="text-sm text-gray-700">Role: <span class="font-semibold text-indigo-600">{{ user_role }}</span></p>
+            <p class="text-sm text-gray-700">Server Time: <span id="footerTime" class="font-semibold text-indigo-700"></span></p>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-4 flex flex-wrap justify-center md:justify-end gap-3">
+        <a href="{% url 'inventory:add_product' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Add Product</a>
+        <a href="{% url 'inventory:generate_report' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">Generate Report</a>
+        <!-- The corrected, secure logout button -->
+        <form action="{% url 'accounts:logout' %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">Logout</button>
+        </form>
+    </div>
+
+    <!-- Low Stock Alert -->
+    {% if products %}
+    <div id="lowStockAlert" class="mt-4 bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm text-yellow-800">
+        <strong>Low Stock Alert:</strong>
+        {% for product in products %}
+            {% if product.stock_quantity <= 5 %}
+                <span>{{ product.name }} ({{ product.stock_quantity }}){% if not forloop.last %}, {% endif %}</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</footer>
+
 <script>
-    // Get references to HTML elements
+    // All your existing JavaScript code goes here...
     const productSelect = document.getElementById('productSelect');
     const quantityInput = document.getElementById('quantityInput');
     const addItemBtn = document.getElementById('addItemBtn');
@@ -91,162 +156,138 @@
     const customerInput = document.getElementById('customerInput');
     const cartInputsDiv = document.getElementById('cartInputs');
 
-    let cart = {}; // Use an object for easier lookup and updates
+    let cart = {};
     let currentTotal = 0;
 
-    // Utility function to display messages
-    function showMessage(msg, type) {
+    // Show notifications
+    function showMessage(msg, type){
         messageArea.textContent = msg;
-        messageArea.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
-        if (type === 'error') {
-            messageArea.classList.add('bg-red-100', 'text-red-700');
-        } else if (type === 'success') {
-            messageArea.classList.add('bg-green-100', 'text-green-700');
-        } else { // info
-            messageArea.classList.add('bg-blue-100', 'text-blue-700');
-        }
+        messageArea.className = 'mt-4 p-3 rounded-lg text-center text-sm font-medium';
+        if(type==='error'){messageArea.classList.add('bg-red-100','text-red-700');}
+        else if(type==='success'){messageArea.classList.add('bg-green-100','text-green-700');}
+        else{messageArea.classList.add('bg-blue-100','text-blue-700');}
         messageArea.classList.remove('hidden');
-        setTimeout(() => {
-            messageArea.classList.add('hidden');
-        }, 3000); // Hide after 3 seconds
+        setTimeout(()=>messageArea.classList.add('hidden'),3000);
     }
 
-    // Function to update the displayed cart and total
+    // Update cart display
     function updateCartDisplay() {
         cartItemsDiv.innerHTML = '';
         currentTotal = 0;
-
-        if (Object.keys(cart).length === 0) {
+        if(Object.keys(cart).length===0){
+            cartItemsDiv.appendChild(noItemsMessage);
             noItemsMessage.classList.remove('hidden');
         } else {
             noItemsMessage.classList.add('hidden');
-            for (const productId in cart) {
-                const item = cart[productId];
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200';
-                itemDiv.innerHTML = `
-                    <span class="text-gray-800 font-medium">${item.quantity} x ${item.productName}</span>
-                    <span class="text-indigo-600 font-semibold">RWF ${(item.quantity * item.productPrice).toFixed(2)}</span>
-                    <button type="button" data-id="${item.productId}" class="remove-item-btn text-red-500 hover:text-red-700 transition-colors">
-                        &times;
-                    </button>
+            for(const id in cart){
+                const item = cart[id];
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-left">${item.productName}</td>
+                    <td class="py-3 px-6 text-center">${item.quantity}</td>
+                    <td class="py-3 px-6 text-right">RWF ${(item.quantity*item.productPrice).toFixed(2)}</td>
+                    <td class="py-3 px-6 text-center">
+                        <button type="button" data-id="${item.productId}" class="remove-item-btn text-red-500 hover:text-red-700 transition-colors">&times;</button>
+                    </td>
                 `;
-                cartItemsDiv.appendChild(itemDiv);
-                currentTotal += (item.quantity * item.productPrice);
+                cartItemsDiv.appendChild(row);
+                currentTotal += item.quantity*item.productPrice;
             }
         }
         totalAmountSpan.textContent = `RWF ${currentTotal.toFixed(2)}`;
+        updateDropdownStock();
     }
 
-    // Event listener for adding items to cart
-    addItemBtn.addEventListener('click', () => {
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        if (!selectedOption.value) {
-            showMessage('Please select a product.', 'error');
-            return;
+    // Update dropdown stock dynamically
+    function updateDropdownStock(){
+        for(let i=0;i<productSelect.options.length;i++){
+            let option = productSelect.options[i];
+            if(!option.value) continue;
+            let productId = option.value;
+            let originalStock = parseInt(option.dataset.stock);
+            let cartQty = cart[productId]?cart[productId].quantity:0;
+            let availableStock = originalStock - cartQty;
+            option.text = `${option.dataset.name} (RWF ${parseFloat(option.dataset.price).toFixed(2)}) - Stock: ${availableStock}`;
+            option.disabled = availableStock <= 0;
         }
+    }
 
+    // Add item
+    addItemBtn.addEventListener('click', ()=>{
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        if(!selectedOption.value){showMessage('Please select a product.','error');return;}
         const productId = selectedOption.value;
         const productName = selectedOption.dataset.name;
         const productPrice = parseFloat(selectedOption.dataset.price);
         const productStock = parseInt(selectedOption.dataset.stock);
         const quantity = parseInt(quantityInput.value);
-        
-        if (isNaN(quantity) || quantity <= 0) {
-            showMessage('Please enter a valid quantity.', 'error');
-            return;
-        }
-        
-        let newQuantity = quantity;
-        if (cart[productId]) {
-            newQuantity += cart[productId].quantity;
-        }
-
-        if (newQuantity > productStock) {
-            showMessage(`Not enough stock for ${productName}. Available: ${productStock}`, 'error');
-            return;
-        }
-
-        if (cart[productId]) {
-            cart[productId].quantity += quantity;
-        } else {
-            cart[productId] = { productId, productName, productPrice, quantity };
-        }
-        
+        if(isNaN(quantity)||quantity<=0){showMessage('Enter valid quantity.','error');return;}
+        let newQuantity = quantity + (cart[productId]?cart[productId].quantity:0);
+        if(newQuantity > productStock){showMessage(`Not enough stock for ${productName}. Available: ${productStock}`,'error');return;}
+        if(cart[productId]){cart[productId].quantity += quantity;} else {cart[productId]={productId,productName,productPrice,quantity};}
         updateCartDisplay();
-        showMessage('Item added to cart!', 'success');
-        quantityInput.value = 1; // Reset quantity
-        productSelect.value = ''; // Reset product selection
+        showMessage(`Added ${quantity} x ${productName} to cart.`,'success');
+        quantityInput.value=1;
+        productSelect.value='';
     });
 
-    // Event listener for removing items from cart
-    cartItemsDiv.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-item-btn')) {
-            const button = e.target;
-            const productId = button.dataset.id;
-            delete cart[productId];
+    // Remove item
+    cartItemsDiv.addEventListener('click',(e)=>{
+        if(e.target.classList.contains('remove-item-btn')){
+            const id = e.target.dataset.id;
+            delete cart[id];
             updateCartDisplay();
-            showMessage('Item removed from cart.', 'info');
+            showMessage('Item removed from cart.','info');
         }
     });
 
-    // Event listener for form submission
-    posForm.addEventListener('submit', async (e) => {
+    // Submit POS form
+    posForm.addEventListener('submit', async (e)=>{
         e.preventDefault();
-
-        if (Object.keys(cart).length === 0) {
-            showMessage('Please add items to the cart before processing the sale.', 'error');
-            return;
+        if(Object.keys(cart).length===0){showMessage('Add items to cart before processing.','error');return;}
+        cartInputsDiv.innerHTML='';
+        for(const id in cart){
+            const item=cart[id];
+            const input=document.createElement('input');
+            input.type='hidden';
+            input.name='items[]';
+            input.value=`product_id=${item.productId}&quantity=${item.quantity}`;
+            cartInputsDiv.appendChild(input);
         }
-
-        // Clear existing hidden inputs before creating new ones
-        cartInputsDiv.innerHTML = '';
-        
-        // Dynamically create a hidden input for each item to match Django's request.POST.getlist('items[]')
-        for (const productId in cart) {
-            const item = cart[productId];
-            const itemInput = document.createElement('input');
-            itemInput.type = 'hidden';
-            itemInput.name = 'items[]';
-            itemInput.value = `product_id=${item.productId}&quantity=${item.quantity}`;
-            cartInputsDiv.appendChild(itemInput);
-        }
-
         customerInput.value = customerSelect.value;
-        
-        try {
-            const response = await fetch(posForm.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: new FormData(posForm)
+        document.getElementById('processSaleBtn').disabled=true;
+        try{
+            const response=await fetch(posForm.action,{
+                method:'POST',
+                headers:{'X-CSRFToken':document.querySelector('[name=csrfmiddlewaretoken]').value},
+                body:new FormData(posForm)
             });
-
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                showMessage(result.message, 'success');
-                
-                if (result.sale_id) {
-                    const receiptUrl = `{% url 'inventory:receipt_view' 0 %}`.replace('0', result.sale_id);
-                    window.open(receiptUrl, '_blank');
+            const result=await response.json();
+            if(result.status==='success'){
+                showMessage(result.message,'success');
+                if(result.sale_id){
+                    const receiptUrl=`{% url 'inventory:receipt_view' 0 %}`.replace('0',result.sale_id);
+                    window.open(receiptUrl,'_blank');
                 }
-                
-                // --- THESE ARE THE KEY CHANGES TO PREVENT DUPLICATE SUBMISSIONS ---
-                cart = {}; // Clear the cart object
-                updateCartDisplay(); // Update the display to show an empty cart
-                window.location.reload(); // Reload the page to get the updated stock from the server
-            } else {
-                showMessage(result.message, 'error');
-            }
-        } catch (error) {
-            console.error('Sale processing error:', error);
-            showMessage('Network error or server issue. Please try again.', 'error');
-        }
+                cart={};
+                updateCartDisplay();
+                window.location.reload();
+            } else {showMessage(result.message,'error');}
+        } catch(err){console.error(err);showMessage('Network or server error.','error');}
+        document.getElementById('processSaleBtn').disabled=false;
     });
 
-    // Initial display update
+    // Initialize cart
     updateCartDisplay();
+
+    // Footer Clock
+    function updateFooterTime() {
+        const now = new Date();
+        const options = { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' };
+        document.getElementById('footerTime').textContent = now.toLocaleString('en-US', options);
+    }
+    setInterval(updateFooterTime, 1000);
+    updateFooterTime();
 </script>
 {% endblock content %}

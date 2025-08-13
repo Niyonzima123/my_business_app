@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{# SEO blocks for a unique page title, meta description, and keywords #}
 {% block title %}{{ product.name }} | Our Business | Shop in Rwanda{% endblock %}
 
 {% block description %}
@@ -15,18 +14,20 @@ View details, price, and stock for {{ product.name }}. Find this product and mor
 {% block content %}
 <div class="container mx-auto px-4 py-8 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
 
-    {# Back to Products Button #}
+    <!-- Back Button -->
     <div class="mb-8">
         <a href="{% url 'inventory:product_list' %}" class="inline-flex items-center text-indigo-700 hover:text-indigo-900 font-medium transition-colors duration-200">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 0h18"></path></svg>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 0h18"/>
+            </svg>
             Back to Products
         </a>
     </div>
 
-    {# Product Detail Card #}
+    <!-- Product Card -->
     <div class="bg-white rounded-3xl shadow-xl overflow-hidden md:grid md:grid-cols-2 md:gap-8 lg:gap-12 p-6 md:p-10">
         
-        {# Product Image Section #}
+        <!-- Product Image -->
         <div class="flex items-center justify-center p-4 bg-gray-100 rounded-2xl mb-8 md:mb-0">
             {% if product.image %}
                 <img src="{{ product.image.url }}" alt="{{ product.name }}" class="max-h-[500px] w-auto rounded-xl shadow-lg object-contain transition-transform duration-300 hover:scale-105">
@@ -35,31 +36,37 @@ View details, price, and stock for {{ product.name }}. Find this product and mor
             {% endif %}
         </div>
 
-        {# Product Information Section #}
+        <!-- Product Info -->
         <div class="space-y-8">
             
-            {# Header with Name and Price #}
+            <!-- Name & Price -->
             <div>
                 <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-2 leading-tight">{{ product.name }}</h1>
                 <p class="text-4xl font-bold text-indigo-600">RWF {{ product.price|floatformat:2 }}</p>
             </div>
 
-            {# Stock and Category Badges #}
+            <!-- Stock & Category Badges -->
             <div class="flex flex-wrap items-center gap-4">
                 <span class="text-sm font-medium text-gray-500">Stock Status:</span>
                 {% if product.stock_quantity <= product.reorder_level and product.stock_quantity > 0 %}
                     <span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.487 0l5.58 9.92c.754 1.34-1.12 2.964-2.693 2.126L12.72 13.91a2 2 0 00-1.42 0l-1.92 1.235c-1.573.838-3.447-.786-2.693-2.126l5.58-9.92z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.487 0l5.58 9.92c.754 1.34-1.12 2.964-2.693 2.126L12.72 13.91a2 2 0 00-1.42 0l-1.92 1.235c-1.573.838-3.447-.786-2.693-2.126l5.58-9.92z" clip-rule="evenodd"/>
+                        </svg>
                         Low Stock ({{ product.stock_quantity }})
                     </span>
                 {% elif product.stock_quantity <= 0 %}
                     <span class="bg-red-100 text-red-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
                         Out of Stock
                     </span>
                 {% else %}
                     <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
                         In Stock ({{ product.stock_quantity }})
                     </span>
                 {% endif %}
@@ -68,36 +75,36 @@ View details, price, and stock for {{ product.name }}. Find this product and mor
                 <span class="text-base text-gray-800 px-4 py-2 bg-gray-100 rounded-full font-medium">{{ product.category.name|default:"N/A" }}</span>
             </div>
 
-            {# Product Description #}
+            <!-- Description -->
             <div>
                 <h2 class="text-xl font-semibold text-gray-800 mb-3">Product Description</h2>
-                <div class="text-gray-600 leading-relaxed text-base lg:text-lg">
-                    <p>{{ product.description|default:"No description available." }}</p>
-                </div>
+                <p class="text-gray-600 leading-relaxed text-base lg:text-lg">
+                    {{ product.description|default:"No description available." }}
+                </p>
             </div>
 
             {% if product.stock_quantity > 0 %}
-            {# Quantity Selector #}
+            <!-- Quantity Selector -->
             <div class="flex items-center space-x-4">
                 <span class="text-sm font-medium text-gray-500">Quantity:</span>
                 <div class="flex items-center border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                     <button type="button" onclick="decrementQuantity()" class="p-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 focus:outline-none">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                     </button>
                     <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock_quantity }}" class="w-16 text-center border-none bg-transparent focus:ring-0 text-gray-900 text-lg">
                     <button type="button" onclick="incrementQuantity()" class="p-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 focus:outline-none">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </button>
                 </div>
             </div>
 
-            {# "Contact via WhatsApp" Button #}
+            <!-- WhatsApp Button -->
             <div class="mt-8">
-                {% with whatsapp_message="Hello Admin, I am interested in purchasing the '"|add:product.name|add:"' (Product ID: "|add:product.id|add:"). Could we discuss the price and delivery details? Thank you." %}
+                {% with whatsapp_message="Hello Admin, I am interested in purchasing the '"|add:product.name|add:"' (Product ID: "|add:product.id|stringformat:"d"|add:"). Could we discuss the price and delivery details? Thank you." %}
                 <a id="whatsapp-link" href="https://wa.me/250782147772?text={{ whatsapp_message|urlencode }}" 
-                    target="_blank" class="flex items-center justify-center w-full bg-green-500 text-white py-4 rounded-lg text-lg font-semibold text-center hover:bg-green-600 transition-colors duration-300 shadow-lg">
+                    target="_blank" class="flex items-center justify-center w-full bg-green-500 text-white py-4 rounded-lg text-lg font-semibold hover:bg-green-600 transition-colors duration-300 shadow-lg">
                     <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12.04 2.1c-5.59 0-10.13 4.54-10.13 10.13 0 1.98.58 3.86 1.63 5.51L2.1 22.02l4.4-1.15c1.69.93 3.63 1.45 5.54 1.45 5.59 0 10.13-4.54 10.13-10.13S17.63 2.1 12.04 2.1zm.04 18.42c-1.84 0-3.56-.5-5.07-1.38l-3.66.96.98-3.58a8.3 8.3 0 01-1.4-4.88c0-4.56 3.7-8.26 8.26-8.26 2.22 0 4.3.87 5.86 2.42s2.42 3.64 2.42 5.86c0 4.56-3.7 8.26-8.26 8.26zm4.1-6.19c-.23-.11-.97-.48-1.12-.53-.16-.05-.27-.07-.38.07-.12.16-.47.65-.58.78-.11.13-.23.15-.43.05-.2-.1-.84-.31-1.6-1-1.18-1.07-1.98-2.39-2.22-2.79-.24-.4-.03-.62.11-.75.1-.1.23-.26.34-.4.11-.13.15-.22.2-.38.05-.16.03-.3-.02-.42-.05-.13-.38-.97-.53-1.32-.14-.35-.29-.29-.4-.29-.11 0-.25-.01-.38-.01s-.34.03-.52.24c-.18.21-.69.67-.69 1.64 0 .97.71 1.9 1.15 2.44.44.54.85.78 1.14 1.15.29.37 2.2 3.55 3.55 4.88 1.34 1.33 1.34 1.95.16 2.65-.18.1-.53.2-1.03.22-.5.03-.97.03-1.81.01-.84-.02-1.38-.13-1.78-.29z"></path>
+                        <path d="M12.04 2.1c-5.59 0-10.13 4.54-10.13 10.13 0 1.98.58 3.86 1.63 5.51L2.1 22.02l4.4-1.15c1.69.93 3.63 1.45 5.54 1.45 5.59 0 10.13-4.54 10.13-10.13S17.63 2.1 12.04 2.1zm.04 18.42c-1.84 0-3.56-.5-5.07-1.38l-3.66.96.98-3.58a8.3 8.3 0 01-1.4-4.88c0-4.56 3.7-8.26 8.26-8.26 2.22 0 4.3.87 5.86 2.42s2.42 3.64 2.42 5.86c0 4.56-3.7 8.26-8.26 8.26z"/>
                     </svg>
                     Contact via WhatsApp
                 </a>
@@ -105,31 +112,22 @@ View details, price, and stock for {{ product.name }}. Find this product and mor
             </div>
             {% else %}
             <div class="mt-8">
-                <button disabled class="flex items-center justify-center w-full bg-gray-400 text-white py-4 rounded-lg text-lg font-semibold text-center cursor-not-allowed shadow-lg">
-                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12.04 2.1c-5.59 0-10.13 4.54-10.13 10.13 0 1.98.58 3.86 1.63 5.51L2.1 22.02l4.4-1.15c1.69.93 3.63 1.45 5.54 1.45 5.59 0 10.13-4.54 10.13-10.13S17.63 2.1 12.04 2.1zm.04 18.42c-1.84 0-3.56-.5-5.07-1.38l-3.66.96.98-3.58a8.3 8.3 0 01-1.4-4.88c0-4.56 3.7-8.26 8.26-8.26 2.22 0 4.3.87 5.86 2.42s2.42 3.64 2.42 5.86c0 4.56-3.7 8.26-8.26 8.26zm4.1-6.19c-.23-.11-.97-.48-1.12-.53-.16-.05-.27-.07-.38.07-.12.16-.47.65-.58.78-.11.13-.23.15-.43.05-.2-.1-.84-.31-1.6-1-1.18-1.07-1.98-2.39-2.22-2.79-.24-.4-.03-.62.11-.75.1-.1.23-.26.34-.4.11-.13.15-.22.2-.38.05-.16.03-.3-.02-.42-.05-.13-.38-.97-.53-1.32-.14-.35-.29-.29-.4-.29-.11 0-.25-.01-.38-.01s-.34.03-.52.24c-.18.21-.69.67-.69 1.64 0 .97.71 1.9 1.15 2.44.44.54.85.78 1.14 1.15.29.37 2.2 3.55 3.55 4.88 1.34 1.33 1.34 1.95.16 2.65-.18.1-.53.2-1.03.22-.5.03-.97.03-1.81.01-.84-.02-1.38-.13-1.78-.29z"></path>
-                    </svg>
+                <button disabled class="flex items-center justify-center w-full bg-gray-400 text-white py-4 rounded-lg text-lg font-semibold cursor-not-allowed shadow-lg">
                     Out of Stock
                 </button>
             </div>
             {% endif %}
 
-            {# Social Media Sharing Buttons #}
+            <!-- Social Sharing -->
             <div class="mt-8">
                 <h2 class="text-xl font-semibold text-gray-800 mb-3">Share This Product</h2>
                 <div class="flex space-x-4">
                     {% with product_url="https://yourwebsite.com"|add:"/product/"|add:product.id|add:"/"|urlencode %}
-                    <a href="https://twitter.com/intent/tweet?url={{ product_url }}&text=Check%20out%20this%20product:%20{{ product.name|urlencode }}%20" target="_blank" class="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 shadow">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M18.244 2.25h3.308l-7.227 8.260L21.602 22h-6.195l-5.607-6.519L5.512 22H2.102l7.591-8.665L2.597 2.25H9.42L14.47 9.173L18.244 2.25h-.009zm-.088 1.488L9.422 19.81H3.843L11.58 3.738h6.576z"></path>
-                        </svg>
-                        Twitter
+                    <a href="https://twitter.com/intent/tweet?url={{ product_url }}&text=Check%20out%20this%20product:%20{{ product.name|urlencode }}" target="_blank" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow">
+                        <i class="fab fa-twitter mr-2"></i> Twitter
                     </a>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ product_url }}" target="_blank" class="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200 shadow">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.233V14.71h-3.365v-3.868h3.365V8.04c0-3.324 1.954-5.155 5.01-5.155 1.439 0 2.671.107 3.033.155v3.538l-2.09.001c-1.636 0-1.954.779-1.954 1.928v2.54h3.945l-.513 3.868h-3.432V24h6.002c.732 0 1.325-.593 1.325-1.325V1.325C24 .593 23.407 0 22.675 0z"></path>
-                        </svg>
-                        Facebook
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ product_url }}" target="_blank" class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow">
+                        <i class="fab fa-facebook mr-2"></i> Facebook
                     </a>
                     {% endwith %}
                 </div>
@@ -140,46 +138,31 @@ View details, price, and stock for {{ product.name }}. Find this product and mor
 </div>
 {% endblock content %}
 
-{# Add JavaScript for quantity selector functionality #}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const quantityInput = document.getElementById('quantity');
         const whatsappLink = document.getElementById('whatsapp-link');
-        const originalWhatsappHref = whatsappLink ? whatsappLink.href : '';
-        
-        function updateWhatsAppLink() {
-            if (!whatsappLink) return;
-            const newQuantity = quantityInput ? quantityInput.value : '1';
-            let newHref = originalWhatsappHref.replace('{{ product.name }}', `{{ product.name|urlencode }}`);
-            newHref = newHref.replace('product_quantity=1', `product_quantity=${newQuantity}`);
+        const originalHref = whatsappLink ? whatsappLink.href : '';
+
+        function updateWhatsApp() {
+            if (!quantityInput || !whatsappLink) return;
+            const qty = quantityInput.value;
+            let newHref = originalHref.replace(/product_quantity=\d+/, `product_quantity=${qty}`);
             whatsappLink.href = newHref;
         }
 
         window.incrementQuantity = function() {
-            if (quantityInput) {
-                let currentValue = parseInt(quantityInput.value);
-                const maxValue = parseInt(quantityInput.max);
-                if (currentValue < maxValue) {
-                    quantityInput.value = currentValue + 1;
-                    updateWhatsAppLink();
-                }
-            }
+            let val = parseInt(quantityInput.value);
+            if (val < parseInt(quantityInput.max)) { quantityInput.value = val+1; updateWhatsApp(); }
         };
-
         window.decrementQuantity = function() {
-            if (quantityInput) {
-                let currentValue = parseInt(quantityInput.value);
-                const minValue = parseInt(quantityInput.min);
-                if (currentValue > minValue) {
-                    quantityInput.value = currentValue - 1;
-                    updateWhatsAppLink();
-                }
-            }
+            let val = parseInt(quantityInput.value);
+            if (val > parseInt(quantityInput.min)) { quantityInput.value = val-1; updateWhatsApp(); }
         };
 
         if (quantityInput) {
-            quantityInput.addEventListener('change', updateWhatsAppLink);
-            updateWhatsAppLink(); // Initial update on page load
+            quantityInput.addEventListener('change', updateWhatsApp);
+            updateWhatsApp();
         }
     });
 </script>

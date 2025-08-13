@@ -1,53 +1,64 @@
-<!-- my_business_app/inventory/templates/inventory/sales_report.html -->
 {% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
-<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Comprehensive Sales Report</h1>
+<div class="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <h1 class="text-4xl font-extrabold text-indigo-800 mb-8 text-center">Comprehensive Sales Report</h1>
 
-<div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-6xl mx-auto border border-blue-200">
-    <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Report Filters</h2>
+    <!-- Filters Section -->
+    <div class="bg-white shadow-lg rounded-xl p-6 sm:p-8 mb-8 border border-gray-200">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Report Filters</h2>
+        <form method="get" action="{% url 'accounts:sales_report' %}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Date Range -->
+            <div>
+                <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" value="{{ selected_start_date }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date:</label>
+                <input type="date" id="end_date" name="end_date" value="{{ selected_end_date }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="period" class="block text-sm font-medium text-gray-700 mb-1">Predefined Period:</label>
+                <select id="period" name="period" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="custom" {% if selected_period == 'custom' %}selected{% endif %}>Custom Range</option>
+                    <option value="today" {% if selected_period == 'today' %}selected{% endif %}>Today</option>
+                    <option value="last_7_days" {% if selected_period == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="last_30_days" {% if selected_period == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="this_month" {% if selected_period == 'this_month' %}selected{% endif %}>This Month</option>
+                    <option value="last_month" {% if selected_period == 'last_month' %}selected{% endif %}>Last Month</option>
+                    <option value="this_year" {% if selected_period == 'this_year' %}selected{% endif %}>This Year</option>
+                    <option value="all_time" {% if selected_period == 'all_time' %}selected{% endif %}>All Time</option>
+                </select>
+            </div>
 
-    <form method="get" action="{% url 'accounts:sales_report' %}" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <div>
-            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date:</label>
-            <input type="date" id="start_date" name="start_date" value="{{ selected_start_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-        </div>
-        <div>
-            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date:</label>
-            <input type="date" id="end_date" name="end_date" value="{{ selected_end_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-        </div>
-        <div>
-            <label for="period" class="block text-sm font-medium text-gray-700 mb-1">Predefined Period:</label>
-            <select id="period" name="period" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="custom" {% if selected_period == 'custom' %}selected{% endif %}>Custom Range</option>
-                <option value="today" {% if selected_period == 'today' %}selected{% endif %}>Today</option>
-                <option value="last_7_days" {% if selected_period == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
-                <option value="last_30_days" {% if selected_period == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
-                <option value="this_month" {% if selected_period == 'this_month' %}selected{% endif %}>This Month</option>
-                <option value="last_month" {% if selected_period == 'last_month' %}selected{% endif %}>Last Month</option>
-                <option value="this_year" {% if selected_period == 'this_year' %}selected{% endif %}>This Year</option>
-                <option value="all_time" {% if selected_period == 'all_time' %}selected{% endif %}>All Time</option>
-            </select>
-        </div>
-        <div class="md:col-span-2">
-            <label for="employee_id" class="block text-sm font-medium text-gray-700 mb-1">Filter by Employee:</label>
-            <select id="employee_id" name="employee_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">All Employees</option>
-                {% for employee in employees %}
-                    <option value="{{ employee.id }}" {% if selected_employee_id|floatformat:0 == employee.id|floatformat:0 %}selected{% endif %}>
-                        {{ employee.username }} ({{ employee.employeeprofile.role|default:"N/A" }})
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="md:col-span-1 flex items-end justify-end">
-            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-md w-full">Apply Filters</button>
-        </div>
-    </form>
+            <!-- Employee Filter -->
+            <div class="md:col-span-2">
+                <label for="employee_id" class="block text-sm font-medium text-gray-700 mb-1">Filter by Employee:</label>
+                <select id="employee_id" name="employee_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Employees</option>
+                    {% for employee in employees %}
+                        <option value="{{ employee.id }}" {% if selected_employee_id|floatformat:0 == employee.id|floatformat:0 %}selected{% endif %}>
+                            {{ employee.username }} ({{ employee.employeeprofile.role|default:"N/A" }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
+            <div class="md:col-span-1 flex items-end justify-end">
+                <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 hover:scale-105 transition transform duration-200 shadow-md w-full">
+                    Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Messages -->
     {% if messages %}
-        <ul class="mb-4 space-y-2">
+        <ul class="mb-6 space-y-2">
             {% for message in messages %}
                 <li class="p-3 rounded-lg text-sm font-medium text-center
                     {% if message.tags == 'error' %}bg-red-100 text-red-700
@@ -59,31 +70,36 @@
         </ul>
     {% endif %}
 
-    <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Summary Statistics</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-indigo-50 p-5 rounded-lg shadow-md border border-indigo-200 text-center">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-indigo-50 p-6 rounded-xl shadow-md border border-indigo-200 text-center hover:shadow-xl transition-shadow duration-300">
             <h3 class="text-lg font-medium text-indigo-800">Total Sales Amount</h3>
             <p class="text-3xl font-extrabold text-indigo-900 mt-2">RWF {{ total_sales_amount|floatformat:2 }}</p>
         </div>
-        <div class="bg-green-50 p-5 rounded-lg shadow-md border border-green-200 text-center">
+        <div class="bg-green-50 p-6 rounded-xl shadow-md border border-green-200 text-center hover:shadow-xl transition-shadow duration-300">
             <h3 class="text-lg font-medium text-green-800">Total Transactions</h3>
             <p class="text-3xl font-extrabold text-green-900 mt-2">{{ total_transactions }}</p>
         </div>
-        <div class="bg-yellow-50 p-5 rounded-lg shadow-md border border-yellow-200 text-center">
+        <div class="bg-yellow-50 p-6 rounded-xl shadow-md border border-yellow-200 text-center hover:shadow-xl transition-shadow duration-300">
             <h3 class="text-lg font-medium text-yellow-800">Average Sale Value</h3>
             <p class="text-3xl font-extrabold text-yellow-900 mt-2">RWF {{ average_sale_value|floatformat:2 }}</p>
         </div>
     </div>
 
-    <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Daily Sales Trend</h2>
-    <div class="bg-gray-50 p-4 rounded-lg shadow-inner border border-gray-200 mb-8">
-        <canvas id="dailySalesChart"></canvas>
+    <!-- Daily Sales Chart -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-10 border border-gray-200">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Daily Sales Trend</h2>
+        <div class="relative h-80">
+            <canvas id="dailySalesChart"></canvas>
+        </div>
     </div>
 
-    <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Individual Sales Records</h2>
-    {% if individual_sales %}
-        <div class="overflow-x-auto mb-6">
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+    <!-- Individual Sales Table -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-200">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">Individual Sales Records</h2>
+        {% if individual_sales %}
+        <div class="overflow-x-auto">
+            <table class="min-w-[700px] md:min-w-full table-auto border border-gray-200 rounded-lg">
                 <thead>
                     <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
                         <th class="py-3 px-6 text-left">Sale ID</th>
@@ -103,7 +119,7 @@
                         <td class="py-3 px-6 text-left">{{ sale.user.username|default:"N/A" }}</td>
                         <td class="py-3 px-6 text-left">{{ sale.customer.get_full_name|default:"Walk-in Customer" }}</td>
                         <td class="py-3 px-6 text-left">
-                            {% if sale.customer %} {# <--- ADDED THIS CONDITIONAL CHECK #}
+                            {% if sale.customer %}
                                 <a href="{% url 'inventory:customer_purchase_history' sale.customer.id %}" class="text-blue-600 hover:underline text-xs font-semibold">View Customer History</a>
                             {% else %}
                                 <span class="text-gray-500 text-xs">N/A (Walk-in)</span>
@@ -114,86 +130,83 @@
                 </tbody>
             </table>
         </div>
-    {% else %}
-        <p class="text-gray-600 text-center p-4 bg-gray-50 rounded-lg border border-gray-200">No sales records found for the selected filters.</p>
-    {% endif %}
+        {% else %}
+            <p class="text-gray-600 text-center p-4 bg-gray-50 rounded-lg border border-gray-200">No sales records found for the selected filters.</p>
+        {% endif %}
+    </div>
 
+    <!-- Action Buttons -->
     <div class="mt-8 text-center flex flex-wrap justify-center gap-4">
-        <a href="{% url 'accounts:owner_dashboard' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors shadow-md">Back to Dashboard</a>
-        <a href="{% url 'inventory:export_sales_csv' %}?start_date={{ selected_start_date }}&end_date={{ selected_end_date }}&period={{ selected_period }}&employee_id={{ selected_employee_id|default:'' }}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md">Export to CSV</a>
+        <a href="{% url 'accounts:owner_dashboard' %}" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-700 hover:scale-105 transition transform duration-200 shadow-md">Back to Dashboard</a>
+        <a href="{% url 'inventory:export_sales_csv' %}?start_date={{ selected_start_date }}&end_date={{ selected_end_date }}&period={{ selected_period }}&employee_id={{ selected_employee_id|default:'' }}" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 hover:scale-105 transition transform duration-200 shadow-md">Export to CSV</a>
     </div>
 </div>
 
-<!-- Chart.js CDN -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const chartLabels = JSON.parse('{{ chart_labels|safe }}');
-        const chartData = JSON.parse('{{ chart_data|safe }}');
+document.addEventListener('DOMContentLoaded', function() {
+    const chartLabels = JSON.parse('{{ chart_labels|safe }}');
+    const chartData = JSON.parse('{{ chart_data|safe }}');
 
-        const ctx = document.getElementById('dailySalesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartLabels,
-                datasets: [{
-                    label: 'Daily Sales (RWF)',
-                    data: chartData,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Sales Amount (RWF)'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
+    const ctx = document.getElementById('dailySalesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Daily Sales (RWF)',
+                data: chartData,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.2,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Sales Amount (RWF)'
                     }
                 },
-                plugins: {
-                    legend: {
+                x: {
+                    title: {
                         display: true,
-                        position: 'top',
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
+                        text: 'Date'
                     }
                 }
-            }
-        });
-
-        // JavaScript to manage custom date range vs. predefined period
-        const startDateInput = document.getElementById('start_date');
-        const endDateInput = document.getElementById('end_date');
-        const periodSelect = document.getElementById('period');
-
-        function toggleDateInputs() {
-            if (periodSelect.value === 'custom') {
-                startDateInput.disabled = false;
-                endDateInput.disabled = false;
-            } else {
-                startDateInput.disabled = true;
-                endDateInput.disabled = true;
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
             }
         }
-
-        // Initial call to set state based on loaded value
-        toggleDateInputs();
-        // Listen for changes on the period select
-        periodSelect.addEventListener('change', toggleDateInputs);
     });
+
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const periodSelect = document.getElementById('period');
+
+    function toggleDateInputs() {
+        const disabled = periodSelect.value !== 'custom';
+        startDateInput.disabled = disabled;
+        endDateInput.disabled = disabled;
+    }
+    toggleDateInputs();
+    periodSelect.addEventListener('change', toggleDateInputs);
+});
 </script>
 {% endblock content %}

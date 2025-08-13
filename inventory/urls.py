@@ -38,4 +38,7 @@ urlpatterns = [
     # NEW: URL patterns for disabling and enabling products
     path('products/<int:pk>/disable/', views.disable_product_view, name='disable_product'),
     path('products/<int:pk>/enable/', views.enable_product_view, name='enable_product'),
+    path('sales/', views.sales_list, name='sales_list'),
+    path('products/add/', views.add_product, name='add_product'),
+    path('reports/generate/', views.generate_report, name='generate_report'),
 ]

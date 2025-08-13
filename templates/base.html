@@ -4,9 +4,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"See Available products" }}</title>
+
+    {# --- Dynamic SEO Blocks --- #}
+    <title>{% block title %}Online Business Management System | Rwandan Inventory & Sales App{% endblock %}</title>
+    <meta name="description" content="{% block description %}Rwandan Business App: Manage inventory, sales, suppliers, employees & customers online. Tailored for small & large businesses in Rwanda.{% endblock %}">
+    <meta name="keywords" content="{% block keywords %}Rwanda business, inventory system, sales tracking, stock control, suppliers, cashier, online shop, business management{% endblock %}">
+
+    {# Open Graph SEO #}
+    <meta property="og:title" content="{% block og_title %}Rwandan Business Management System{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Your one-stop solution for managing inventory, sales, and more. Helping Rwandan businesses thrive.{% endblock %}">
+    <meta property="og:image" content="{% static 'images/og-image.jpg' %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri|default:'' }}">
+    <meta property="og:type" content="website">
+
+    {# Twitter Card SEO #}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Rwandan Business Management System{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Manage inventory, sales, suppliers, and customers with ease. Built for Rwanda.{% endblock %}">
+    <meta name="twitter:image" content="{% static 'images/og-image.jpg' %}">
+
+    {# Canonical & Sitemap #}
+    {% if request %}
+        <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    {% endif %}
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <link rel="robots" href="/robots.txt">
+
+    {# JSON-LD Structured Data for Local Business SEO #}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Rwandan Business Management System",
+      "image": "{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-image.jpg' %}",
+      "@id": "",
+      "url": "{{ request.build_absolute_uri|default:'' }}",
+      "telephone": "+250782147772",
+      "email": "niyonzimaisaac89@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Catholic University of Rwanda - Save Campus",
+        "addressLocality": "Butare/Huye",
+        "postalCode": "250",
+        "addressCountry": "RW"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -2.6071,
+        "longitude": 29.7394
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+          "opens": "08:00",
+          "closes": "18:00"
+        }
+      ],
+      "sameAs": [
+        "https://www.facebook.com/YourBusinessPage",
+        "https://twitter.com/YourBusinessPage",
+        "https://www.instagram.com/YourBusinessPage",
+        "https://www.linkedin.com/in/YourBusinessPage"
+      ]
+    }
+    </script>
+
+    {# Tailwind & Icons #}
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ99uKjTqI3v5qJ5v5v5v5v5v5v5v5v5v5v5v5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -16,31 +83,34 @@
             flex-direction: column;
         }
         main { flex-grow: 1; }
-        /* Custom styles for the new footer, removed hover effects */
-        .social-icon {
-            transition: transform 0.3s ease;
+        .nav-link {
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            display: block;
+            transition: background-color 0.3s;
+        }
+        .nav-link:hover {
+            background-color: rgba(99, 102, 241, 0.8);
         }
     </style>
 </head>
 <body class="text-gray-800">
 
+{# --- NAVIGATION --- #}
 <nav class="bg-gradient-to-r from-indigo-700 to-indigo-900 p-4 shadow-xl">
     <div class="container mx-auto flex flex-wrap justify-between items-center">
-        
         <a href="{% url 'inventory:product_list' %}" class="flex items-center space-x-3 text-white text-2xl font-bold rounded-lg px-3 py-1 hover:bg-indigo-700 transition-colors">
-            <span>Products </span>
+            <span>Products</span>
         </a>
-
-        <button id="menu-toggle" class="text-white text-2xl sm:hidden focus:outline-none">
-            &#9776;
-        </button>
+        <button id="menu-toggle" class="text-white text-2xl sm:hidden focus:outline-none" aria-label="Toggle Menu">&#9776;</button>
 
         <div id="menu" class="hidden w-full sm:flex sm:w-auto flex-col sm:flex-row items-start sm:items-center mt-4 sm:mt-0 space-y-2 sm:space-y-0 sm:space-x-4">
             {% if user.is_authenticated %}
                 {% with user_role=user.employeeprofile.role|default:'N/A' %}
                     {% if user_role == 'Owner' %}
                         <a href="{% url 'accounts:owner_dashboard' %}" class="nav-link">Dashboard</a>
-                        <a href="{% url 'inventory:pos_view' %}" class="nav-link">Selling part</a>
+                        <a href="{% url 'inventory:pos_view' %}" class="nav-link">Selling Part</a>
                         <a href="{% url 'accounts:sales_report' %}" class="nav-link">Sales Reports</a>
                         <a href="{% url 'inventory:product_performance_report' %}" class="nav-link">Product Performance</a>
                         <a href="{% url 'inventory:employee_sales_report' %}" class="nav-link">Employee Sales</a>
@@ -51,7 +121,7 @@
                         <a href="{% url 'admin:inventory_product_changelist' %}" class="nav-link">Products Admin</a>
                         <a href="{% url 'admin:auth_user_changelist' %}" class="nav-link">Users Admin</a>
                     {% elif user_role == 'Cashier' %}
-                        <a href="{% url 'inventory:pos_view' %}" class="nav-link">Selling part</a>
+                        <a href="{% url 'inventory:pos_view' %}" class="nav-link">Selling Part</a>
                         <a href="{% url 'inventory:my_sales' %}" class="nav-link">My Sales</a>
                         <a href="{% url 'inventory:customer_list' %}" class="nav-link">Customers</a>
                     {% elif user_role == 'Stock Manager' %}
@@ -78,85 +148,26 @@
     </div>
 </nav>
 
+{# --- MAIN CONTENT --- #}
 <main class="container mx-auto p-4 sm:p-6 mt-4">
-    {% block content %}
-    {% endblock content %}
+    {% block content %}{% endblock %}
 </main>
 
+{# --- FOOTER --- #}
 <footer class="bg-gray-900 text-white p-8 mt-8">
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
-        <div class="col-span-1">
+        <div>
             <h3 class="text-2xl font-bold mb-4 text-indigo-400">Rwandan Business App</h3>
-            <p class="text-white text-sm">
-                Your one-stop solution for managing inventory, sales,Employees and more. We are committed to helping your business thrive in the Rwandan market.
-            </p>
+            <p class="text-sm">Your one-stop solution for managing inventory, sales, employees, and more. Helping your business thrive in Rwanda.</p>
         </div>
-
-        <div class="col-span-1">
+        <div>
             <h3 class="text-2xl font-bold mb-4 text-indigo-400">Contact Us</h3>
-            <ul class="text-white space-y-2">
-                <li>
-                    <i class="fas fa-map-marker-alt text-indigo-400 mr-2"></i>
-                    <span>Catholic University of Rwanda -Save Campus, &nbsp;&nbsp;Butare/Huye, Rwanda</span>
-                </li>
-                <li>
-                    <i class="fas fa-phone-alt text-indigo-400 mr-2"></i>
-                    <a href="tel:+250782147772" class="text-white">+250782147772</a>
-                </li>
-                <li>
-                    <i class="fas fa-envelope text-indigo-400 mr-2"></i>
-                    <a href="niyonzimaisaac89@gmail.com" class="text-white">Niyonzimaisaac89@gmail.com</a>
-                </li>
+            <ul class="space-y-2">
+                <li><i class="fas fa-map-marker-alt text-indigo-400 mr-2"></i> Catholic University of Rwanda, Save Campus, Butare/Huye</li>
+                <li><i class="fas fa-phone-alt text-indigo-400 mr-2"></i> <a href="tel:+250782147772" class="text-white">+250 782 147 772</a></li>
+                <li><i class="fas fa-envelope text-indigo-400 mr-2"></i> <a href="mailto:niyonzimaisaac89@gmail.com" class="text-white">niyonzimaisaac89@gmail.com</a></li>
             </ul>
         </div>
-
-        <div class="col-span-1">
-            <h3 class="text-2xl font-bold mb-4 text-indigo-400">Follow Us</h3>
-            <div class="flex justify-center md:justify-start space-x-4">
-                <a href="#" aria-label="Facebook" class="text-white social-icon"><i class="fab fa-facebook-f text-3xl"></i>Facebook</a>
-                <a href="#" aria-label="Twitter" class="text-white social-icon"><i class="fab fa-twitter text-3xl"></i>Twitter</a>
-                <a href="#" aria-label="Instagram" class="text-white social-icon"><i class="fab fa-instagram text-3xl"></i>Instagram</a>
-                <a href="#" aria-label="LinkedIn" class="text-white social-icon"><i class="fab fa-linkedin-in text-3xl"></i>Linkedin</a>
-            </div>
-        </div>
-
-        <div class="col-span-1">
-            <h3 class="text-2xl font-bold mb-4 text-indigo-400">Developers</h3>
-            <ul class="text-white space-y-2 text-sm">
-                <li>Developed by: <a href="https://yourwebsite.com" target="_blank" class="text-white">Niyonzima Isaac</a></li>
-                <li>Version: 1.0.0</li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="border-t border-gray-700 mt-8 pt-6 text-center">
-        <p class="text-white text-sm">
-            &copy; {{"now"|date:"Y"}} Rwandan business Management System. All rights reserved.
-            <a href="#" class="text-white ml-2">Privacy Policy</a>
-            <span class="mx-2 text-gray-400">|</span>
-            <a href="#" class="text-white">Terms of Service</a>
-        </p>
-    </div>
-</footer>
-
-<script>
-    document.getElementById('menu-toggle').addEventListener('click', function () {
-        document.getElementById('menu').classList.toggle('hidden');
-    });
-</script>
-
-<style>
-    .nav-link {
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        transition: background-color 0.3s;
-        display: block;
-    }
-    .nav-link:hover {
-        background-color: rgba(99, 102, 241, 0.8);
-    }
-</style>
-
-</body>
-</html>
+        <div>
+            <h3 class="text-2xl font-bold mb-4 text-indigo-400"></h3>
+            <div class="flex justify-center md:justify-start space-x

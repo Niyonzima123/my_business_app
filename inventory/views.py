@@ -754,3 +754,48 @@ def enable_product_view(request, pk):
     else:
         messages.error(request, 'Invalid request method.')
     return redirect('inventory:product_list')
+
+
+# inventory/views.py
+
+from django.shortcuts import render
+
+def sales_list(request):
+    # Fetch your sales data here
+    sales_data = [] # Replace with actual data retrieval
+    context = {
+        'sales': sales_data
+    }
+    return render(request, 'inventory/sales_list.html', context)
+# inventory/views.py
+
+from django.shortcuts import render, redirect
+from .forms import ProductForm  # Assuming you have a form
+
+def add_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('inventory:product_list')  # Redirect to product list
+    else:
+        form = ProductForm()
+
+    context = {'form': form}
+    return render(request, 'inventory/add_product.html', context)
+# inventory/views.py
+
+from django.shortcuts import render
+
+def generate_report(request):
+    # Your logic to generate the report data goes here
+    report_data = {
+        'title': 'Sales Report',
+        'period': 'Last 30 Days',
+        # Add more report details
+    }
+
+    context = {
+        'report': report_data
+    }
+    return render(request, 'inventory/report.html', context)

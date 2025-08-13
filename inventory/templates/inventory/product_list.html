@@ -1,159 +1,187 @@
-{% extends 'base.html' %} {# This tells Django to use base.html as the layout #}
-{% load static %} {# Load static files for image URLs #}
+{% extends 'base.html' %}
+{% load static %}
 
 {# --- Page-Specific SEO Blocks --- #}
-{# The title for this specific page, overriding the default in base.html #}
-{% block title %}Our Business Products | Shop in Rwanda{% endblock %}
+{% block title %}Buy Business Products in Rwanda | Smart Trading{% endblock %}
 
-{# A compelling description for this page to appear in search results #}
 {% block description %}
-Explore our comprehensive range of business products for stock, sales, and employee management. Find the best tools to grow your business in Rwanda.
+Shop our curated selection of business products in Rwanda — from inventory management tools to sales and employee tracking systems. Affordable prices, fast delivery, and quality guaranteed.
 {% endblock %}
 
-{# Keywords relevant to the content on this product listing page #}
 {% block keywords %}
-Rwanda business products, shop online in Rwanda, inventory management system in Rwanda, sales tools, employee tracking, office supplies, business equipment
+Rwanda business products, shop online in Rwanda, inventory management Rwanda, sales tracking tools, office equipment Rwanda, employee management software, affordable business supplies
 {% endblock %}
 
-{# --- Main Page Content --- #}
 {% block content %}
-<h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">Our Products</h1>
+<section itemscope itemtype="https://schema.org/Store">
+    <meta itemprop="name" content="Smart Trading">
+    <meta itemprop="url" content="https://yourwebsite.com/products">
+    <meta itemprop="description" content="Business products for sale in Rwanda — inventory, sales, and employee management tools.">
 
-{# Search and Filter/Sort Section #}
-<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
-        {# Search Bar #}
-        <div class="w-full sm:w-1/2">
-            <label for="productSearch" class="sr-only">Search Products</label>
-            <input type="text" id="productSearch" placeholder="Search products..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-        </div>
+    <h1 class="text-4xl font-extrabold text-indigo-800 mb-6 text-center">
+        Our Products
+    </h1>
 
-        {# Filter by Category #}
-        <div class="w-full sm:w-1/4">
-            <label for="categoryFilter" class="sr-only">Filter by Category</label>
-            <select id="categoryFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                <option value="all">All Categories</option>
-                {% for category in categories %}
-                    <option value="{{ category.name }}">{{ category.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    {# Search and Filter/Sort Section #}
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6" aria-label="Product search and filter section">
+        <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            {# Search Bar #}
+            <div class="w-full sm:w-1/2">
+                <label for="productSearch" class="sr-only">Search Products</label>
+                <input type="search" id="productSearch" placeholder="Search products by name..." aria-label="Search products"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+            </div>
 
-        {# Sort By #}
-        <div class="w-full sm:w-1/4">
-            <label for="sortOrder" class="sr-only">Sort by</label>
-            <select id="sortOrder" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                <option value="name_asc">Name (A-Z)</option>
-                <option value="name_desc">Name (Z-A)</option>
-                <option value="price_asc">Price (Low to High)</option>
-                <option value="price_desc">Price (High to Low)</option>
-            </select>
-        </div>
-    </div>
-</div>
+            {# Filter by Category #}
+            <div class="w-full sm:w-1/4">
+                <label for="categoryFilter" class="sr-only">Filter by Category</label>
+                <select id="categoryFilter" aria-label="Filter products by category"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <option value="all">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.name }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-<div id="product-list-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    {% for product in products %}
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300 product-card" data-category="{{ product.category.name|default:'N/A' }}" data-name="{{ product.name|lower }}" data-price="{{ product.price }}">
-        {# Product Image Display #}
-        <div class="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
-            {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
-            {% else %}
-                {# Placeholder image if no product image is available #}
-                <img src="https://placehold.co/400x300/e2e8f0/64748b?text=No+Image" alt="No product image" class="w-full h-full object-cover">
-            {% endif %}
-        </div>
-
-        <div class="p-4">
-            <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ product.name }}</h2>
-            <p class="text-gray-600 text-sm mb-3">{{ product.description|truncatechars:100 }}</p>
-            <p class="text-indigo-700 font-bold text-lg mb-2">RWF {{ product.price|floatformat:2 }}</p>
-
-            <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-500">Category: {{ product.category.name|default:"N/A" }}</span>
-                {% if product.stock_quantity <= product.reorder_level and product.stock_quantity > 0 %}
-                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Low Stock ({{ product.stock_quantity }})</span>
-                {% elif product.stock_quantity <= 0 %}
-                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Out of Stock</span>
-                {% else %}
-                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">In Stock ({{ product.stock_quantity }})</span>
-                {% endif %}
+            {# Sort By #}
+            <div class="w-full sm:w-1/4">
+                <label for="sortOrder" class="sr-only">Sort by</label>
+                <select id="sortOrder" aria-label="Sort products"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <option value="name_asc">Name (A-Z)</option>
+                    <option value="name_desc">Name (Z-A)</option>
+                    <option value="price_asc">Price (Low to High)</option>
+                    <option value="price_desc">Price (High to Low)</option>
+                </select>
             </div>
         </div>
-        
-        {# View Details Button #}
-        <div class="p-4 pt-0">
-            <a href="{% url 'inventory:product_detail' product.id %}" class="block w-full bg-indigo-600 text-white py-2 px-4 text-center rounded-lg font-semibold hover:bg-indigo-700 transition-colors duration-300">
-                View Details
-            </a>
+
+        {# Clear Filters Button #}
+        <div class="mt-4 flex justify-end">
+            <button id="clearFiltersBtn"
+                class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300">
+                Clear Filters
+            </button>
         </div>
     </div>
-    {% empty %}
-    <div class="col-span-full text-center p-8 bg-white rounded-xl shadow-md text-gray-600">
-        <p class="text-lg">No products available yet. Please add some products via the <a href="{% url 'admin:index' %}" class="text-indigo-600 hover:underline">Admin Panel</a>.</p>
-    </div>
-    {% endfor %}
-</div>
 
+    {# Product List #}
+    <div id="product-list-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in products %}
+        <article itemscope itemtype="https://schema.org/Product"
+            class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300 product-card"
+            data-category="{{ product.category.name|default:'N/A' }}" data-name="{{ product.name|lower }}"
+            data-price="{{ product.price }}">
+            
+            {# Product Image Display #}
+            <div class="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="Buy {{ product.name }} in Rwanda" itemprop="image"
+                        class="w-full h-full object-cover">
+                {% else %}
+                    <img src="https://placehold.co/400x300/e2e8f0/64748b?text=No+Image" alt="No image available for {{ product.name }}"
+                        class="w-full h-full object-cover">
+                {% endif %}
+            </div>
+
+            <div class="p-4">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2" itemprop="name">{{ product.name }}</h2>
+                <p class="text-gray-600 text-sm mb-3" itemprop="description">{{ product.description|truncatechars:100 }}</p>
+                <p class="text-indigo-700 font-bold text-lg mb-2">
+                    <span itemprop="priceCurrency" content="RWF">RWF</span>
+                    <span itemprop="price" content="{{ product.price|floatformat:2 }}">{{ product.price|floatformat:2 }}</span>
+                </p>
+
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-500">Category: {{ product.category.name|default:"N/A" }}</span>
+                    {% if product.stock_quantity <= product.reorder_level and product.stock_quantity > 0 %}
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Low Stock ({{ product.stock_quantity }})</span>
+                    {% elif product.stock_quantity <= 0 %}
+                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Out of Stock</span>
+                    {% else %}
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">In Stock ({{ product.stock_quantity }})</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {# View Details Button #}
+            <div class="p-4 pt-0">
+                <a href="{% url 'inventory:product_detail' product.id %}" itemprop="url"
+                    class="block w-full bg-indigo-600 text-white py-2 px-4 text-center rounded-lg font-semibold hover:bg-indigo-700 transition-colors duration-300">
+                    View Details
+                </a>
+            </div>
+        </article>
+        {% empty %}
+        <div class="col-span-full text-center p-8 bg-white rounded-xl shadow-md text-gray-600" id="initial-no-products">
+            <p class="text-lg">No products available yet. Please add some via the
+                <a href="{% url 'admin:index' %}" class="text-indigo-600 hover:underline">Admin Panel</a>.
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+{# Filtering Script - unchanged #}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const productSearch = document.getElementById('productSearch');
         const categoryFilter = document.getElementById('categoryFilter');
         const sortOrder = document.getElementById('sortOrder');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
         const productListContainer = document.getElementById('product-list-container');
         const productCards = Array.from(productListContainer.getElementsByClassName('product-card'));
+        const initialNoProductsMessage = document.getElementById('initial-no-products');
 
         function updateProductDisplay() {
             const searchQuery = productSearch.value.toLowerCase();
             const selectedCategory = categoryFilter.value;
             const selectedSortOrder = sortOrder.value;
 
-            // Filter products
             let filteredProducts = productCards.filter(card => {
                 const productName = card.getAttribute('data-name');
                 const productCategory = card.getAttribute('data-category');
-                
-                const matchesSearch = productName.includes(searchQuery);
-                const matchesCategory = selectedCategory === 'all' || productCategory === selectedCategory;
-
-                return matchesSearch && matchesCategory;
+                return productName.includes(searchQuery) &&
+                    (selectedCategory === 'all' || productCategory === selectedCategory);
             });
 
-            // Sort products
             filteredProducts.sort((a, b) => {
                 const aName = a.getAttribute('data-name');
                 const bName = b.getAttribute('data-name');
                 const aPrice = parseFloat(a.getAttribute('data-price'));
                 const bPrice = parseFloat(b.getAttribute('data-price'));
-
-                if (selectedSortOrder === 'name_asc') {
-                    return aName.localeCompare(bName);
-                } else if (selectedSortOrder === 'name_desc') {
-                    return bName.localeCompare(aName);
-                } else if (selectedSortOrder === 'price_asc') {
-                    return aPrice - bPrice;
-                } else if (selectedSortOrder === 'price_desc') {
-                    return bPrice - aPrice;
-                }
+                if (selectedSortOrder === 'name_asc') return aName.localeCompare(bName);
+                if (selectedSortOrder === 'name_desc') return bName.localeCompare(aName);
+                if (selectedSortOrder === 'price_asc') return aPrice - bPrice;
+                if (selectedSortOrder === 'price_desc') return bPrice - aPrice;
                 return 0;
             });
 
-            // Clear and re-render the list
             productListContainer.innerHTML = '';
             if (filteredProducts.length > 0) {
                 filteredProducts.forEach(card => productListContainer.appendChild(card));
+                if (initialNoProductsMessage) initialNoProductsMessage.style.display = 'none';
             } else {
                 const noProductsMessage = document.createElement('div');
                 noProductsMessage.className = 'col-span-full text-center p-8 bg-white rounded-xl shadow-md text-gray-600';
                 noProductsMessage.innerHTML = '<p class="text-lg">No products match your search or filter criteria.</p>';
                 productListContainer.appendChild(noProductsMessage);
+                if (initialNoProductsMessage) initialNoProductsMessage.style.display = 'none';
             }
+        }
+
+        function clearFilters() {
+            productSearch.value = '';
+            categoryFilter.value = 'all';
+            sortOrder.value = 'name_asc';
+            updateProductDisplay();
         }
 
         productSearch.addEventListener('input', updateProductDisplay);
         categoryFilter.addEventListener('change', updateProductDisplay);
         sortOrder.addEventListener('change', updateProductDisplay);
+        clearFiltersBtn.addEventListener('click', clearFilters);
     });
 </script>
 {% endblock content %}
