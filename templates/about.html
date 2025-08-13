@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us - Rwandan Business App{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Hero/Mission Section -->
+    <section class="bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-xl p-8 md:p-12 mb-12 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-900 mb-4 animate-fade-in">
+            Empowering Rwandan Businesses, One Solution at a Time
+        </h1>
+        <p class="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed animate-fade-in-delay">
+            Our mission is to provide small and medium-sized businesses in Rwanda with a powerful, yet easy-to-use, online business management system. We're dedicated to helping you streamline operations, boost efficiency, and grow your enterprise with confidence.
+        </p>
+    </section>
+
+    <!-- Key Features Section -->
+    <section class="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12">
+        <h2 class="text-3xl font-bold text-indigo-800 mb-8 text-center">Our Core Features</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Feature 1: Inventory Management -->
+            <div class="flex flex-col items-center p-6 bg-gray-50 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-indigo-50 shadow-md">
+                <i class="fas fa-cubes text-5xl text-indigo-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Advanced Inventory Control</h3>
+                <p class="text-gray-600 text-center">
+                    Track stock in real-time, manage multiple locations, and get automated low-stock alerts to prevent costly shortages.
+                </p>
+            </div>
+            <!-- Feature 2: Sales & POS -->
+            <div class="flex flex-col items-center p-6 bg-gray-50 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-indigo-50 shadow-md">
+                <i class="fas fa-cash-register text-5xl text-indigo-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Efficient Point-of-Sale</h3>
+                <p class="text-gray-600 text-center">
+                    A fast and intuitive POS system for cashiers, designed for seamless transactions and accurate sales tracking.
+                </p>
+            </div>
+            <!-- Feature 3: Financial Reporting -->
+            <div class="flex flex-col items-center p-6 bg-gray-50 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-indigo-50 shadow-md">
+                <i class="fas fa-chart-line text-5xl text-indigo-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Detailed Financial Reports</h3>
+                <p class="text-gray-600 text-center">
+                    Generate comprehensive sales, product performance, and employee reports to gain valuable business insights.
+                </p>
+            </div>
+            <!-- Feature 4: User Management -->
+            <div class="flex flex-col items-center p-6 bg-gray-50 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-indigo-50 shadow-md">
+                <i class="fas fa-user-shield text-5xl text-indigo-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Secure User Roles</h3>
+                <p class="text-gray-600 text-center">
+                    Assign specific roles (Owner, Cashier, Stock Manager) with controlled access to ensure data security.
+                </p>
+            </div>
+            <!-- Feature 5: Customer & Supplier Management -->
+            <div class="flex flex-col items-center p-6 bg-gray-50 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-indigo-50 shadow-md">
+                <i class="fas fa-users text-5xl text-indigo-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Customer & Supplier CRM</h3>
+                <p class="text-gray-600 text-center">
+                    Easily manage customer and supplier information, including purchase history and contact details.
+                </p>
+            </div>
+            <!-- Feature 6: Mobile Accessibility -->
+            <div class="flex flex-col items-center p-6 bg-gray-50 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-indigo-50 shadow-md">
+                <i class="fas fa-mobile-alt text-5xl text-indigo-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Fully Responsive</h3>
+                <p class="text-gray-600 text-center">
+                    Work from anywhere with a system that looks and feels great on any device, from desktop to mobile.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Services Section -->
+    <section class="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12">
+        <h2 class="text-3xl font-bold text-indigo-800 mb-8 text-center">Our Services</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-center md:text-left">
+            <!-- Service 1 -->
+            <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl shadow-md">
+                <i class="fas fa-tasks text-3xl text-indigo-600"></i>
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Comprehensive Management</h3>
+                    <p class="text-gray-600">
+                        A single platform to manage all your critical business operations, from tracking inventory and sales to managing your staff.
+                    </p>
+                </div>
+            </div>
+            <!-- Service 2 -->
+            <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl shadow-md">
+                <i class="fas fa-file-invoice-dollar text-3xl text-indigo-600"></i>
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Detailed Reporting & Analytics</h3>
+                    <p class="text-gray-600">
+                        Generate and export detailed sales reports, track product performance, and monitor employee productivity to drive growth.
+                    </p>
+                </div>
+            </div>
+            <!-- Service 3 -->
+            <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl shadow-md">
+                <i class="fas fa-shipping-fast text-3xl text-indigo-600"></i>
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Seamless Supplier & Order Flow</h3>
+                    <p class="text-gray-600">
+                        Easily manage your suppliers, create and track purchase orders, and receive stock efficiently to keep your shelves full.
+                    </p>
+                </div>
+            </div>
+            <!-- Service 4 -->
+            <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl shadow-md">
+                <i class="fas fa-handshake text-3xl text-indigo-600"></i>
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Customer Relationship Management</h3>
+                    <p class="text-gray-600">
+                        Maintain a comprehensive customer database and view their purchase history to build stronger, long-lasting relationships.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Rwandan Advantage Section -->
+    <section class="bg-indigo-50 rounded-2xl shadow-xl p-8 md:p-12 mb-12 flex flex-col lg:flex-row items-center gap-8">
+        <div class="lg:w-1/2">
+            <h2 class="text-3xl font-bold text-indigo-800 mb-4 text-center lg:text-left">The Rwandan Advantage</h2>
+            <p class="text-lg text-gray-700 leading-relaxed mb-4">
+                Our platform is more than just a tool; it's a partner for your business, built with the specific needs of the Rwandan market in mind. We have a deep understanding of local business practices and regulations.
+            </p>
+            <p class="text-lg text-gray-700 leading-relaxed">
+                By choosing our system, you get dedicated support from our local team, ensuring quick and effective assistance whenever you need it. We're committed to helping your business grow and succeed within the local economy.
+            </p>
+        </div>
+        <div class="lg:w-1/2 flex justify-center">
+            <img src="{% static 'images/rwanda_advantage.svg' %}" onerror="this.onerror=null; this.src='https://placehold.co/400x300/4F46E5/FFFFFF?text=Rwanda Advantage';" alt="A stylized representation of Rwanda's business landscape" class="rounded-lg shadow-lg max-w-full h-auto">
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12 text-center">
+        <h2 class="text-3xl font-bold text-indigo-800 mb-8">Meet the Founder</h2>
+        <div class="flex flex-col items-center">
+            <img src="https://placehold.co/128x128/6366F1/FFFFFF?text=NI" alt="Niyonizima Isaac" class="w-32 h-32 rounded-full mb-4 object-cover shadow-lg">
+            <h3 class="text-xl font-semibold text-gray-900">Niyonizima Isaac</h3>
+            <p class="text-indigo-600">Founder & Lead Developer</p>
+            <p class="text-gray-600 mt-2 max-w-xl">
+                Isaac is the visionary behind this project, with a passion for using technology to solve local business challenges. His expertise in software development and understanding of the Rwandan market led to the creation of this tailored management system.
+            </p>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="text-center bg-indigo-800 text-white rounded-2xl p-8 md:p-12 shadow-xl">
+        <h2 class="text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
+        <p class="text-lg mb-6">
+            Join the community of successful Rwandan businesses that are already using our system to streamline their operations.
+        </p>
+        <a href="{% url 'accounts:login' %}" class="bg-white text-indigo-800 font-bold py-3 px-8 rounded-full text-lg shadow-lg hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+            Get Started Now
+        </a>
+    </section>
+</div>
+
+<style>
+    /* Keyframe animations for a polished look */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
+    .animate-fade-in-delay { animation: fadeIn 1s ease-out 0.5s forwards; opacity: 0; }
+</style>
+{% endblock %}

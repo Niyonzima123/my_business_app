@@ -799,3 +799,17 @@ def generate_report(request):
         'report': report_data
     }
     return render(request, 'inventory/report.html', context)
+
+from django.shortcuts import render
+
+def about(request):
+    return render(request, 'about.html')
+
+def services(request):
+    return render(request, 'services.html')
+
+def privacy_policy(request):
+    return render(request, 'privacy_policy.html')
+
+def terms_of_service(request):
+    return render(request, 'terms_of_service.html')

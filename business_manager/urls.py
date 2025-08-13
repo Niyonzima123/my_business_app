@@ -15,27 +15,35 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
- # business_manager/urls.py
+# business_manager/urls.py
 
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.static import serve # ADD THIS IMPORT
+
+# Assuming your static pages' views are in the inventory app's views.py
+from inventory import views as inventory_views 
 
 urlpatterns = [
+    # Django Admin Panel
     path('admin/', admin.site.urls),
-    path('', include('inventory.urls')),
+
+    # Authentication URLs from the accounts app
     path('accounts/', include('accounts.urls')),
+    
+    # All inventory-related URLs are handled by the inventory app
+    path('', include('inventory.urls')),
+
+    # Static, general pages for the website
+    path('about/', inventory_views.about, name='about'),
+    path('services/', inventory_views.services, name='services'),
+    path('privacy-policy/', inventory_views.privacy_policy, name='privacy_policy'),
+    path('terms-of-service/', inventory_views.terms_of_service, name='terms_of_service'),
 ]
 
-# This is for serving media files on Render (production)
-# The DEBUG block below is for local development only.
-urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-]
-
-
-# This block serves media files ONLY when DEBUG is True (local development)
+# This block is essential for serving media and static files during local development.
+# It should not be used in a production environment.
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
