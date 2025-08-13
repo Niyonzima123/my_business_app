@@ -5,6 +5,27 @@ from django.contrib.auth.models import User
 from .models import EmployeeProfile, ExpenseCategory, Expense
 from inventory.models import Product # Import Product model
 
+# New form for creating a user
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields + ('email',)
+
+# Form for editing a user's basic details
+class UserUpdateForm(forms.ModelForm):
+    email = forms.EmailField(required=True)
+    
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors'}),
+            'first_name': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors'}),
+            'last_name': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors'}),
+            'email': forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors'}),
+        }
+
+
 # Form for Employee Profile (for use in custom employee creation/editing outside admin)
 class EmployeeProfileForm(forms.ModelForm):
     class Meta:

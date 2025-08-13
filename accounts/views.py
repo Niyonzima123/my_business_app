@@ -1,11 +1,12 @@
 # accounts/views.py
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Sum # For aggregation in reports
 from django.db.models.functions import TruncMonth, TruncDate # For date-based aggregation
 from datetime import datetime, timedelta, date # For date calculations
+from django.db import transaction # To ensure both user and profile are saved together
 
 # Import the helper functions from inventory.views (ensure they are defined there)
 from inventory.views import is_owner, is_cashier, is_stock_manager
@@ -13,8 +14,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 # Import Expense models and forms
 from .models import ExpenseCategory, Expense
-from .forms import ExpenseCategoryForm, ExpenseForm
+from .forms import ExpenseCategoryForm, ExpenseForm, EmployeeProfileForm # Added EmployeeProfileForm
 from inventory.models import Product # Needed for AddStockForm queryset if it's in accounts.forms
+
+# Added for user management
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 class CustomLoginView(LoginView):
@@ -60,7 +66,59 @@ def stock_manager_dashboard(request):
     return render(request, 'accounts/stock_manager_dashboard.html', context)
 
 
-# --- NEW EXPENSE TRACKING VIEWS ---
+# --- NEW USER MANAGEMENT VIEWS ---
+
+@login_required
+@user_passes_test(is_owner, login_url='/accounts/login/')
+def create_user(request):
+    """
+    Allows an owner to create a new user and assign a role.
+    """
+    if request.method == 'POST':
+        user_form = UserCreationForm(request.POST)
+        profile_form = EmployeeProfileForm(request.POST)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            try:
+                with transaction.atomic():
+                    user = user_form.save()
+                    profile = profile_form.save(commit=False)
+                    profile.user = user
+                    profile.save()
+                    messages.success(request, f'User {user.username} created successfully!')
+                    return redirect('accounts:user_list')
+            except Exception as e:
+                messages.error(request, f'An error occurred: {e}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        user_form = UserCreationForm()
+        profile_form = EmployeeProfileForm()
+        
+    context = {
+        'page_title': 'Create New User',
+        'user_form': user_form,
+        'profile_form': profile_form,
+    }
+    return render(request, 'accounts/create_user.html', context)
+
+
+@login_required
+@user_passes_test(is_owner, login_url='/accounts/login/')
+def user_list(request):
+    """
+    Displays a list of all users.
+    """
+    users = User.objects.all().select_related('employeeprofile')
+    context = {
+        'page_title': 'User Management',
+        'users': users,
+    }
+    return render(request, 'accounts/user_list.html', context)
+
+# --- EXPENSE TRACKING VIEWS ---
+# (The rest of the expense tracking views remain unchanged)
+# The provided code for these views is correct and can be used as is.
 
 @login_required
 @user_passes_test(is_owner, login_url='/accounts/login/')
