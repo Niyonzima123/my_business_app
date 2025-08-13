@@ -69,10 +69,15 @@
       ]
     }
     </script>
+    
+    {# --- Favicon (Best Practice) --- #}
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
 
     {# Tailwind & Icons #}
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
 
     <style>
         body {
@@ -169,5 +174,39 @@
             </ul>
         </div>
         <div>
-            <h3 class="text-2xl font-bold mb-4 text-indigo-400"></h3>
-            <div class="flex justify-center md:justify-start space-x
+            <h3 class="text-2xl font-bold mb-4 text-indigo-400">Socials</h3>
+            <div class="flex justify-center md:justify-start space-x-4">
+                <a href="https://www.facebook.com/YourBusinessPage" class="text-white hover:text-indigo-400 transition-colors" aria-label="Facebook"><i class="fab fa-facebook-f text-lg"></i></a>
+                <a href="https://twitter.com/YourBusinessPage" class="text-white hover:text-indigo-400 transition-colors" aria-label="Twitter"><i class="fab fa-twitter text-lg"></i></a>
+                <a href="https://www.instagram.com/YourBusinessPage" class="text-white hover:text-indigo-400 transition-colors" aria-label="Instagram"><i class="fab fa-instagram text-lg"></i></a>
+                <a href="https://www.linkedin.com/in/YourBusinessPage" class="text-white hover:text-indigo-400 transition-colors" aria-label="LinkedIn"><i class="fab fa-linkedin-in text-lg"></i></a>
+            </div>
+        </div>
+        <div>
+            <h3 class="text-2xl font-bold mb-4 text-indigo-400">Quick Links</h3>
+            <ul class="space-y-2 text-sm">
+                <li><a href="#" class="hover:text-indigo-400 transition-colors">About Us</a></li>
+                <li><a href="#" class="hover:text-indigo-400 transition-colors">Services</a></li>
+                <li><a href="#" class="hover:text-indigo-400 transition-colors">Privacy Policy</a></li>
+                <li><a href="#" class="hover:text-indigo-400 transition-colors">Terms of Service</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container mx-auto text-center text-sm mt-8 pt-8 border-t border-gray-700">
+        &copy; 2024 Rwandan Business Management System. All Rights Reserved.
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const menu = document.getElementById('menu');
+
+        menuToggle.addEventListener('click', function() {
+            menu.classList.toggle('hidden');
+        });
+    });
+</script>
+
+</body>
+</html>
